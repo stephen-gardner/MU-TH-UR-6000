@@ -13,54 +13,55 @@ import java.util.ArrayList;
 
 public class CmdLogs implements CommandExecutor {
 
-    private Mother mom;
+  private Mother mom;
 
-    public CmdLogs(Mother mom) {
-        this.mom = mom;
+  public CmdLogs(Mother mom) {
+    this.mom = mom;
+  }
+
+  @Override
+  @SuppressWarnings("Duplicates")
+  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+    ArrayList<LogEntry> logs;
+
+    if (args.length != 1) return false;
+
+    try {
+      logs = mom.getDatabase().lookupLogs(args[0]);
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return false;
     }
 
-    @Override
-    @SuppressWarnings("Duplicates")
-    public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
-        ArrayList<LogEntry> logs;
+    if (logs.isEmpty()) return false;
 
-        if (args.length != 1) return false;
+    String fileName = String.format("log-%s.txt", args[0]);
+    File logFile = new File(fileName);
 
-        try {
-            logs = mom.getDatabase().lookupLogsByThreadID(args[0]);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        if (logs.isEmpty()) return false;
-
-        String fileName = String.format("log-%s.txt", args[0]);
-        File logFile = new File(fileName);
-
-        try {
-            buildLogFile(logFile, logs);
-            mom.getSession().sendFile(mom.getChannel(), Files.readAllBytes(logFile.toPath()), fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            logFile.delete();
-            return false;
-        }
-
-        logFile.delete();
-        return true;
+    try {
+      buildLogFile(logFile, logs);
+      mom.getSession()
+          .sendFile(mom.getConvChannel(), Files.readAllBytes(logFile.toPath()), fileName);
+    } catch (IOException e) {
+      e.printStackTrace();
+      logFile.delete();
+      return false;
     }
 
-    private void buildLogFile(File logFile, ArrayList<LogEntry> logs) throws IOException {
-        FileWriter fw = new FileWriter(logFile);
+    logFile.delete();
+    return true;
+  }
 
-        for (LogEntry log : logs) {
-            String userName = mom.getSession().findUserById(log.getUserID()).getUserName();
+  private void buildLogFile(File logFile, ArrayList<LogEntry> logs) throws IOException {
+    FileWriter fw = new FileWriter(logFile);
 
-            if (log.isOriginal()) fw.write(String.format("%s: %s\n", userName, log.getMessage()));
-            else fw.write(String.format("%s: %s (edited)\n", userName, log.getMessage()));
-        }
+    for (LogEntry log : logs) {
+      String userName = mom.getSession().findUserById(log.getUserID()).getUserName();
 
-        fw.close();
+      if (log.isOriginal()) fw.write(String.format("%s: %s\n", userName, log.getMessage()));
+      else fw.write(String.format("%s: %s (edited)\n", userName, log.getMessage()));
     }
+
+    fw.close();
+  }
 }

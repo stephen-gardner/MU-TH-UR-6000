@@ -12,128 +12,122 @@ import java.util.ArrayList;
 
 public class Database {
 
-    private Mother mom;
-    private File dbFile;
-    private Connection conn;
+  private Mother mom;
+  private Connection conn;
 
-    public Database(Mother mom, String dbPath) throws SQLException {
-        this.mom = mom;
-        dbFile = new File(dbPath);
-        conn = getConnection();
+  public Database(Mother mom, String dbPath) throws SQLException {
+    this.mom = mom;
+    conn = openConnection(new File(dbPath));
+  }
 
-        createDatabase();
+  public Conversation loadConversation(String threadTimestamp) throws SQLException {
+    PreparedStatement ps = conn.prepareStatement(SQL.FIND_THREAD_INDEX.toString());
+
+    ps.setString(1, threadTimestamp);
+
+    ResultSet rs = ps.executeQuery();
+
+    if (!rs.next()) {
+      rs.close();
+      ps.close();
+      return null;
     }
 
-    public void close() throws SQLException {
-        conn.close();
+    SlackUser user = mom.getSession().findUserById(rs.getString("user_id"));
+    Conversation conv =
+        new Conversation(
+            mom,
+            user.getId(),
+            mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel().getId(),
+            threadTimestamp);
+    Conversation prev = mom.addConversation(conv.getDirectChannelID(), conv);
+
+    if (prev == null) {
+      conv.sendToThread(Msg.SESSION_RESUME_CHAN.toString());
+      conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
     }
 
-    public Conversation loadConversation(String threadTimestamp) throws SQLException {
-        PreparedStatement ps = conn.prepareStatement(SQL.FIND_THREAD_INDEX.toString());
+    rs.close();
+    ps.close();
+    return conv;
+  }
 
-        ps.setString(1, threadTimestamp);
+  public ArrayList<LogEntry> lookupLogs(String threadID) throws SQLException {
+    ArrayList<LogEntry> logs = new ArrayList<>();
+    PreparedStatement ps = conn.prepareStatement(SQL.LOOKUP_LOGS_THREAD.toString());
 
-        ResultSet rs = ps.executeQuery();
+    ps.setString(1, threadID);
 
-        if (!rs.next()) {
-            rs.close();
-            ps.close();
-            return null;
-        }
+    ResultSet rs = ps.executeQuery();
 
-        SlackUser user = mom.getSession().findUserById(rs.getString("user_id"));
-        Conversation conv =
-                new Conversation(
-                        mom,
-                        user.getId(),
-                        mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel().getId(),
-                        threadTimestamp);
-        Conversation prev = mom.addConversation(conv.getDirectChannelID(), conv);
-
-        if (prev == null) {
-            conv.sendToThread(Msg.SESSION_RESUME_CHAN.toString());
-            conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
-        }
-
-        rs.close();
-        ps.close();
-        return conv;
+    while (rs.next()) {
+      logs.add(
+          new LogEntry(
+              rs.getString("user_id"),
+              rs.getString("content"),
+              rs.getString("timestamp"),
+              rs.getBoolean("original")));
     }
 
-    public ArrayList<LogEntry> lookupLogsByThreadID(String threadID) throws SQLException {
-        ArrayList<LogEntry> logs = new ArrayList<>();
-        PreparedStatement ps = conn.prepareStatement(SQL.LOOKUP_LOGS_THREAD.toString());
+    rs.close();
+    ps.close();
+    return logs;
+  }
 
-        ps.setString(1, threadID);
+  public ArrayList<String> lookupThreads(String userID, int page) throws SQLException {
+    ArrayList<String> threads = new ArrayList<>();
+    PreparedStatement ps = conn.prepareStatement(SQL.LOOKUP_THREADS.toString());
 
-        ResultSet rs = ps.executeQuery();
+    ps.setString(1, userID);
+    ps.setInt(2, Main.getConfig().getThreadsPerPage());
+    ps.setInt(3, (Main.getConfig().getThreadsPerPage() * (page - 1)));
 
-        while (rs.next()) {
-            logs.add(
-                    new LogEntry(
-                            rs.getString("user_id"),
-                            rs.getString("content"),
-                            rs.getString("timestamp"),
-                            rs.getBoolean("original")));
-        }
+    ResultSet rs = ps.executeQuery();
 
-        rs.close();
-        ps.close();
-        return logs;
+    while (rs.next()) {
+      String threadID = rs.getString("thread_id");
+
+      threads.add(Util.getThreadLink(mom.getSession(), mom.getConvChannel().getId(), threadID));
     }
 
-    public ArrayList<String> lookupThreads(String userID, int page) throws SQLException {
-        ArrayList<String> threads = new ArrayList<>();
-        PreparedStatement ps = conn.prepareStatement(SQL.LOOKUP_THREADS.toString());
+    rs.close();
+    ps.close();
+    return threads;
+  }
 
-        ps.setString(1, userID);
-        ps.setInt(2, Main.getConfig().getThreadsPerPage());
-        ps.setInt(3, (Main.getConfig().getThreadsPerPage() * (page - 1)));
+  public void saveMessages(Conversation conv) throws SQLException {
+    PreparedStatement ps;
 
-        ResultSet rs = ps.executeQuery();
+    ps = conn.prepareStatement(SQL.INSERT_THREAD_INDEX.toString());
+    ps.setString(1, conv.getThreadTimestamp());
+    ps.setString(2, conv.getUserID());
+    ps.executeUpdate();
+    ps = conn.prepareStatement(SQL.INSERT_MESSAGE.toString());
 
-        while (rs.next()) {
-            String threadID = rs.getString("thread_id");
-
-            threads.add(Util.getThreadLink(mom.getSession(), mom.getChannel().getId(), threadID));
-        }
-
-        rs.close();
-        ps.close();
-        return threads;
+    for (LogEntry log : conv.getLogs()) {
+      ps.setString(1, log.getUserID());
+      ps.setString(2, conv.getThreadTimestamp());
+      ps.setString(3, log.getMessage());
+      ps.setString(4, log.getChanTimestamp());
+      ps.setBoolean(5, log.isOriginal());
+      ps.addBatch();
     }
 
-    public void saveMessages(Conversation conv) throws SQLException {
-        PreparedStatement ps;
+    ps.executeBatch();
+    ps.close();
+  }
 
-        ps = conn.prepareStatement(SQL.INSERT_THREAD_INDEX.toString());
-        ps.setString(1, conv.getThreadTimestamp());
-        ps.setString(2, conv.getUserID());
-        ps.executeUpdate();
-        ps = conn.prepareStatement(SQL.INSERT_MESSAGE.toString());
+  private Connection openConnection(File dbFile) throws SQLException {
+    Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
+    Statement stmt = conn.createStatement();
 
-        for (LogEntry log : conv.getAllLogs()) {
-            ps.setString(1, log.getUserID());
-            ps.setString(2, conv.getThreadTimestamp());
-            ps.setString(3, log.getMessage());
-            ps.setString(4, log.getChanTimestamp());
-            ps.setBoolean(5, log.isOriginal());
-            ps.addBatch();
-        }
+    stmt.execute(SQL.CREATE_MESSAGES_TABLE.toString());
+    stmt.execute(SQL.CREATE_THREAD_INDEX_TABLE.toString());
+    stmt.close();
+    return conn;
+  }
 
-        ps.executeBatch();
-        ps.close();
-    }
-
-    private void createDatabase() throws SQLException {
-        Statement stmt = conn.createStatement();
-
-        stmt.execute(SQL.CREATE_MESSAGES_TABLE.toString());
-        stmt.execute(SQL.CREATE_THREAD_INDEX_TABLE.toString());
-        stmt.close();
-    }
-
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
-    }
+  public void close() throws SQLException {
+    conn.close();
+  }
 }

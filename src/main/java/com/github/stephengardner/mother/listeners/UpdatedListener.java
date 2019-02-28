@@ -8,25 +8,25 @@ import com.ullink.slack.simpleslackapi.listeners.SlackMessageUpdatedListener;
 
 public class UpdatedListener implements SlackMessageUpdatedListener {
 
-    private Mother mom;
+  private Mother mom;
 
-    public UpdatedListener(Mother mom) {
-        this.mom = mom;
-    }
+  public UpdatedListener(Mother mom) {
+    this.mom = mom;
+  }
 
-    public void registerEvent() {
-        mom.getSession().addMessageUpdatedListener(this);
-    }
+  public void registerEvent() {
+    mom.getSession().addMessageUpdatedListener(this);
+  }
 
-    @Override
-    public void onEvent(SlackMessageUpdated ev, SlackSession s) {
-        Conversation conv = mom.findConversation(ev.getMessageTimestamp(), false);
+  @Override
+  public void onEvent(SlackMessageUpdated ev, SlackSession s) {
+    Conversation conv = mom.findConversation(ev.getMessageTimestamp(), false);
 
-        if (conv == null) return;
+    if (conv == null) return;
 
-        conv.updateMessage(
-                ev.getMessageTimestamp(),
-                ev.getNewMessage(),
-                ev.getChannel().getId().equals(conv.getDirectChannelID()));
-    }
+    conv.updateMessage(
+        ev.getMessageTimestamp(),
+        ev.getNewMessage(),
+        ev.getChannel().getId().equals(conv.getDirectChannelID()));
+  }
 }

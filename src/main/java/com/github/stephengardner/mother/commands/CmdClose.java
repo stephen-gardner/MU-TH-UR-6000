@@ -10,35 +10,35 @@ import java.sql.SQLException;
 
 public class CmdClose implements CommandExecutor {
 
-    private Mother mom;
+  private Mother mom;
 
-    public CmdClose(Mother mom) {
-        this.mom = mom;
+  public CmdClose(Mother mom) {
+    this.mom = mom;
+  }
+
+  @Override
+  @SuppressWarnings("Duplicates")
+  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+    if (args.length != 1) return false;
+
+    String dstUserID = Util.getTaggedUserID(args[0]);
+    SlackUser dstUser = mom.getSession().findUserById(dstUserID);
+
+    if (dstUser == null) return false;
+
+    Conversation conv = mom.findConversationByUserID(dstUserID);
+
+    if (conv == null) return false;
+
+    conv.expire();
+
+    try {
+      mom.reapConversations(Main.getConfig().getSessionTimeout());
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return false;
     }
 
-    @Override
-    @SuppressWarnings("Duplicates")
-    public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
-        if (args.length < 1) return false;
-
-        String dstUserID = Util.getTaggedUserID(args[0]);
-        SlackUser dstUser = mom.getSession().findUserById(dstUserID);
-
-        if (dstUser == null) return false;
-
-        Conversation conv = mom.findConversationByUserID(dstUserID);
-
-        if (conv == null) return false;
-
-        conv.expire();
-
-        try {
-            mom.reapConversations(Main.getConfig().getSessionTimeout());
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
+    return true;
+  }
 }

@@ -8,28 +8,29 @@ import com.ullink.slack.simpleslackapi.listeners.ReactionRemovedListener;
 
 public class EmojiRemovedListener implements ReactionRemovedListener {
 
-    private Mother mom;
+  private Mother mom;
 
-    public EmojiRemovedListener(Mother mom) {
-        this.mom = mom;
-    }
+  public EmojiRemovedListener(Mother mom) {
+    this.mom = mom;
+  }
 
-    public void registerEvent() {
-        mom.getSession().addReactionRemovedListener(this);
-    }
+  public void registerEvent() {
+    mom.getSession().addReactionRemovedListener(this);
+  }
 
-    @Override
-    public void onEvent(ReactionRemoved ev, SlackSession s) {
-        if (s.sessionPersona().getId().equals(ev.getUser().getId())) return;
+  @Override
+  @SuppressWarnings("Duplicates")
+  public void onEvent(ReactionRemoved ev, SlackSession s) {
+    if (s.sessionPersona().getId().equals(ev.getUser().getId())) return;
 
-        Conversation conv = mom.findConversation(ev.getMessageID(), false);
+    Conversation conv = mom.findConversation(ev.getMessageID(), false);
 
-        if (conv == null) return;
+    if (conv == null) return;
 
-        conv.setReaction(
-                ev.getMessageID(),
-                ev.getEmojiName(),
-                ev.getChannel().getId().equals(conv.getDirectChannelID()),
-                true);
-    }
+    conv.setReaction(
+        ev.getMessageID(),
+        ev.getEmojiName(),
+        ev.getChannel().getId().equals(conv.getDirectChannelID()),
+        true);
+  }
 }

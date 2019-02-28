@@ -7,32 +7,30 @@ import com.ullink.slack.simpleslackapi.SlackUser;
 
 public class CmdContact implements CommandExecutor {
 
-    private Mother mom;
+  private Mother mom;
 
-    public CmdContact(Mother mom) {
-        this.mom = mom;
+  public CmdContact(Mother mom) {
+    this.mom = mom;
+  }
+
+  @Override
+  @SuppressWarnings("Duplicates")
+  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+    if (args.length != 1) return false;
+
+    String dstUserID = Util.getTaggedUserID(args[0]);
+    SlackUser dstUser = mom.getSession().findUserById(dstUserID);
+
+    if (dstUser == null) return false;
+
+    Conversation conv = mom.findConversationByUserID(dstUserID);
+
+    if (conv != null) {
+      mom.startConversation(dstUser, conv.getDirectChannelID(), false);
+      return true;
     }
 
-    @Override
-    @SuppressWarnings("Duplicates")
-    public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
-        if (args.length < 1) return false;
-
-        String dstUserID = Util.getTaggedUserID(args[0]);
-        SlackUser dstUser = mom.getSession().findUserById(dstUserID);
-
-        if (dstUser == null) return false;
-
-        Conversation conv = mom.findConversationByUserID(dstUserID);
-        String directChanID =
-                mom.getSession().openDirectMessageChannel(dstUser).getReply().getSlackChannel().getId();
-
-        if (conv != null) {
-            mom.startConversation(dstUser, directChanID, false);
-            return true;
-        }
-
-        mom.startConversation(dstUser, directChanID, true);
-        return true;
-    }
+    mom.startConversation(dstUser, mom.getUserChannel(dstUser).getId(), true);
+    return true;
+  }
 }

@@ -7,18 +7,18 @@ import com.ullink.slack.simpleslackapi.listeners.SlackChannelJoinedListener;
 
 public class JoinedChannelListener implements SlackChannelJoinedListener {
 
-    private Mother mom;
+  private Mother mom;
 
-    public JoinedChannelListener(Mother mom) {
-        this.mom = mom;
-    }
+  public JoinedChannelListener(Mother mom) {
+    this.mom = mom;
+  }
 
-    public void registerEvent() {
-        mom.getSession().addChannelJoinedListener(this);
-    }
+  public void registerEvent() {
+    mom.getSession().addChannelJoinedListener(this);
+  }
 
-    @Override
-    public void onEvent(SlackChannelJoined ev, SlackSession s) {
-        s.leaveChannel(ev.getSlackChannel());
-    }
+  @Override
+  public void onEvent(SlackChannelJoined ev, SlackSession s) {
+    s.leaveChannel(ev.getSlackChannel());
+  }
 }

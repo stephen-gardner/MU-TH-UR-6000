@@ -12,40 +12,40 @@ import com.ullink.slack.simpleslackapi.listeners.SlackMessagePostedListener;
 
 public class DirectMessageListener implements SlackMessagePostedListener {
 
-    private Mother mom;
+  private Mother mom;
 
-    public DirectMessageListener(Mother mom) {
-        this.mom = mom;
+  public DirectMessageListener(Mother mom) {
+    this.mom = mom;
+  }
+
+  public void registerEvent() {
+    mom.getSession().addMessagePostedListener(this);
+  }
+
+  @Override
+  public void onEvent(SlackMessagePosted ev, SlackSession s) {
+    SlackUser user = ev.getUser();
+    SlackChannel chan = ev.getChannel();
+
+    if (s.sessionPersona().getId().equals(user.getId()) || user.getId().equals("USLACKBOT")) return;
+
+    if (!chan.isDirect()) {
+      if (!mom.hasJoinedChannel(chan.getId())) {
+        s.sendMessage(chan, Msg.NO_GROUPS.toString());
+        mom.addJoinedChannel(chan.getId());
+      }
+
+      return;
     }
 
-    public void registerEvent() {
-        mom.getSession().addMessagePostedListener(this);
-    }
+    if (!mom.hasConversation(chan.getId())) mom.startConversation(user, chan.getId(), true);
 
-    @Override
-    public void onEvent(SlackMessagePosted ev, SlackSession s) {
-        SlackUser user = ev.getUser();
-        SlackChannel chan = ev.getChannel();
+    Conversation conv = mom.getConversation(chan.getId());
+    String content =
+        String.format(Msg.MESSAGE_COPY_FMT.toString(), user.getId(), ev.getMessageContent());
+    String chanTimestamp = conv.sendToThread(content).getTimestamp();
+    LogEntry log = new LogEntry(user.getId(), ev.getMessageContent(), chanTimestamp, true);
 
-        if (s.sessionPersona().getId().equals(user.getId()) || user.getId().equals("USLACKBOT")) return;
-
-        if (!chan.isDirect()) {
-            if (!mom.hasJoinedChannel(chan.getId())) {
-                s.sendMessage(chan, Msg.NO_GROUPS.toString());
-                mom.addJoinedChannel(chan.getId());
-            }
-
-            return;
-        }
-
-        if (!mom.hasConversation(chan.getId())) mom.startConversation(user, chan.getId(), true);
-
-        Conversation conv = mom.getConversation(chan.getId());
-        String content =
-                String.format(Msg.MESSAGE_COPY_FMT.toString(), user.getId(), ev.getMessageContent());
-        String chanTimestamp = conv.sendToThread(content).getTimestamp();
-        LogEntry log = new LogEntry(user.getId(), ev.getMessageContent(), chanTimestamp, true);
-
-        conv.addLog(ev.getTimestamp(), chanTimestamp, log);
-    }
+    conv.addLog(ev.getTimestamp(), chanTimestamp, log);
+  }
 }

@@ -9,33 +9,33 @@ import java.util.Collections;
 
 public class CmdHelp implements CommandExecutor {
 
-    private Mother mom;
+  private Mother mom;
 
-    public CmdHelp(Mother mom) {
-        this.mom = mom;
+  public CmdHelp(Mother mom) {
+    this.mom = mom;
+  }
+
+  @Override
+  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+    if (args.length != 0) return false;
+
+    ArrayList<String> commands = new ArrayList<>(mom.getCommands().keySet());
+    StringBuilder sb = new StringBuilder();
+    boolean first = true;
+
+    commands.remove("help");
+    commands.remove("reload");
+    commands.remove("shutdown");
+    Collections.sort(commands);
+
+    for (String cmd : commands) {
+      if (first) first = false;
+      else sb.append(", ");
+
+      sb.append(String.format("`%s`", cmd));
     }
 
-    @Override
-    public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
-        if (args.length > 0) return false;
-
-        ArrayList<String> commands = new ArrayList<>(mom.getCommands().keySet());
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-
-        commands.remove("help");
-        commands.remove("reload");
-        commands.remove("shutdown");
-        Collections.sort(commands);
-
-        for (String cmd : commands) {
-            if (first) first = false;
-            else sb.append(", ");
-
-            sb.append(String.format("`%s`", cmd));
-        }
-
-        mom.sendToChannel(String.format(Msg.LIST_COMMANDS.toString(), sb.toString()), threadTimestamp);
-        return true;
-    }
+    mom.sendToChannel(String.format(Msg.LIST_COMMANDS.toString(), sb.toString()), threadTimestamp);
+    return true;
+  }
 }
