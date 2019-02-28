@@ -29,7 +29,7 @@ public class ChanMessageListener implements SlackMessagePostedListener {
     String userID = ev.getUser().getId();
     String threadTimestamp = ev.getThreadTimestamp();
 
-    if (!ev.getChannel().equals(mom.getConvChannelID())
+    if (!ev.getChannel().getId().equals(mom.getConvChannelID())
         || s.sessionPersona().getId().equals(userID)
         || userID.equals("USLACKBOT")) return;
 
