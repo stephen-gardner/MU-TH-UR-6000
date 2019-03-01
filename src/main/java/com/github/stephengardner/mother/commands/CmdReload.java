@@ -2,6 +2,7 @@ package com.github.stephengardner.mother.commands;
 
 import com.github.stephengardner.mother.Main;
 import com.github.stephengardner.mother.Mother;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 public class CmdReload implements CommandExecutor {
@@ -13,7 +14,8 @@ public class CmdReload implements CommandExecutor {
   }
 
   @Override
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length == 0 && (user.isAdmin() || user.getId().equals("U24L3CM0R"))) {
       Main.loadConfig();
       return true;

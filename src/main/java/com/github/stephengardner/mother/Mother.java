@@ -7,14 +7,12 @@ import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackPreparedMessage;
 import com.ullink.slack.simpleslackapi.SlackSession;
 import com.ullink.slack.simpleslackapi.SlackUser;
+import com.ullink.slack.simpleslackapi.events.SlackMessagePosted;
 import com.ullink.slack.simpleslackapi.impl.SlackSessionFactory;
 import com.ullink.slack.simpleslackapi.replies.SlackMessageReply;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -137,9 +135,29 @@ public class Mother {
     }
   }
 
+  public void runCommands(SlackMessagePosted ev, String threadTimestamp) {
+    String[] args = ev.getMessageContent().trim().split("\\s+");
+
+    for (String cmdName : commands.keySet()) {
+      if (args[0].equalsIgnoreCase("!" + cmdName)) {
+        String[] cmdArgs = Arrays.copyOfRange(args, 1, args.length);
+        CommandExecutor cmd = commands.get(cmdName);
+        boolean success = cmd.onCommand(ev.getChannel(), ev.getUser(), cmdArgs, threadTimestamp);
+
+        session.addReactionToMessage(
+            ev.getChannel(),
+            ev.getTimeStamp(),
+            (success) ? Msg.REACT_SUCCESS.toString() : Msg.REACT_FAILURE.toString());
+        return;
+      }
+    }
+
+    session.addReactionToMessage(ev.getChannel(), ev.getTimeStamp(), Msg.REACT_UNKNOWN.toString());
+  }
+
   public void startConversation(SlackUser user, String directChanID, boolean notifyUser) {
     String notice = String.format(Msg.SESSION_NOTICE.toString(), user.getUserName());
-    String threadTimestamp = sendToChannel(notice).getTimestamp();
+    String threadTimestamp = sendToConvChannel(notice).getTimestamp();
     Conversation conv = new Conversation(this, user.getId(), directChanID, threadTimestamp);
 
     if (notifyUser) conv.sendToUser(Msg.SESSION_START.toString());
@@ -147,18 +165,26 @@ public class Mother {
     addConversation(directChanID, conv);
   }
 
-  public SlackMessageReply sendToChannel(String msg) {
-    return session.sendMessage(convChannel, msg).getReply();
+  public SlackMessageReply sendToChannel(SlackChannel chan, String msg) {
+    return session.sendMessage(chan, msg).getReply();
   }
 
-  public SlackMessageReply sendToChannel(String msg, String threadTimestamp) {
+  public SlackMessageReply sendToConvChannel(String msg) {
+    return sendToChannel(convChannel, msg);
+  }
+
+  public SlackMessageReply sendToChannel(SlackChannel chan, String msg, String threadTimestamp) {
     SlackPreparedMessage pm =
         new SlackPreparedMessage.Builder()
             .withThreadTimestamp(threadTimestamp)
             .withMessage(msg)
             .build();
 
-    return session.sendMessage(convChannel, pm).getReply();
+    return session.sendMessage(chan, pm).getReply();
+  }
+
+  public SlackMessageReply sendToConvChannel(String msg, String threadTimestamp) {
+    return sendToChannel(convChannel, msg, threadTimestamp);
   }
 
   public SlackChannel getConvChannel() {

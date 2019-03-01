@@ -3,6 +3,7 @@ package com.github.stephengardner.mother.commands;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
 import com.github.stephengardner.mother.data.Msg;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.sql.SQLException;
@@ -18,7 +19,8 @@ public class CmdHistory implements CommandExecutor {
 
   @Override
   @SuppressWarnings("Duplicates")
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     ArrayList<String> threads;
 
     if (args.length < 1 || args.length > 2) return false;
@@ -47,20 +49,23 @@ public class CmdHistory implements CommandExecutor {
       return false;
     }
 
-    if (threads.isEmpty()) return false;
-
-    mom.sendToChannel(buildOutputList(dstUserID, threads, page), threadTimestamp);
+    mom.sendToChannel(chan, buildOutputList(dstUserID, threads, page), threadTimestamp);
     return true;
   }
 
   private String buildOutputList(String userID, ArrayList<String> threads, int page) {
     StringBuilder sb = new StringBuilder();
+    boolean empty = true;
 
     sb.append(String.format(Msg.LIST_THREADS.toString(), userID, page));
 
     for (String threadLink : threads) {
-      sb.append("\u2022 ").append(threadLink).append("\n");
+      if (empty) empty = false;
+
+      sb.append(">").append(threadLink).append("\n");
     }
+
+    if (empty) sb.append(Msg.LIST_NONE.toString());
 
     return sb.toString();
   }

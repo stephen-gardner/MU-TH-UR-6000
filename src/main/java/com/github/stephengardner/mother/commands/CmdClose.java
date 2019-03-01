@@ -4,6 +4,7 @@ import com.github.stephengardner.mother.Conversation;
 import com.github.stephengardner.mother.Main;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.sql.SQLException;
@@ -18,7 +19,8 @@ public class CmdClose implements CommandExecutor {
 
   @Override
   @SuppressWarnings("Duplicates")
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length != 1) return false;
 
     String dstUserID = Util.getTaggedUserID(args[0]);

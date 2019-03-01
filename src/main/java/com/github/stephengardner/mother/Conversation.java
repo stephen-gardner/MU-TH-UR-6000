@@ -86,7 +86,7 @@ public class Conversation {
   }
 
   public SlackMessageReply sendToThread(String msg) {
-    return mom.sendToChannel(msg, threadTimestamp);
+    return mom.sendToConvChannel(msg, threadTimestamp);
   }
 
   public SlackMessageReply sendToUser(String msg) {

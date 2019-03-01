@@ -4,10 +4,11 @@ import com.github.stephengardner.mother.Main;
 
 public enum Msg {
   ACTIVE_CONVS,
-  ACTIVE_CONVS_NONE,
   ACTIVE_INFO,
   CONFIG_ERROR,
+  IN_CONV_CHANNEL,
   LIST_COMMANDS,
+  LIST_NONE,
   LIST_THREADS,
   MESSAGE_COPY_FMT,
   MESSAGE_LINK,

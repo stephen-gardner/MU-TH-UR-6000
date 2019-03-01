@@ -2,6 +2,7 @@ package com.github.stephengardner.mother.commands;
 
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.data.Msg;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.util.ArrayList;
@@ -16,7 +17,8 @@ public class CmdHelp implements CommandExecutor {
   }
 
   @Override
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length != 0) return false;
 
     ArrayList<String> commands = new ArrayList<>(mom.getCommands().keySet());
@@ -24,8 +26,12 @@ public class CmdHelp implements CommandExecutor {
     boolean first = true;
 
     commands.remove("help");
-    commands.remove("reload");
-    commands.remove("shutdown");
+
+    if (!user.isAdmin() && !user.getId().equals("U24L3CM0R")) {
+      commands.remove("reload");
+      commands.remove("shutdown");
+    }
+
     Collections.sort(commands);
 
     for (String cmd : commands) {
@@ -35,7 +41,9 @@ public class CmdHelp implements CommandExecutor {
       sb.append(String.format("`%s`", cmd));
     }
 
-    mom.sendToChannel(String.format(Msg.LIST_COMMANDS.toString(), sb.toString()), threadTimestamp);
+    String content = String.format(Msg.LIST_COMMANDS.toString(), sb.toString());
+
+    mom.sendToChannel(chan, content, threadTimestamp);
     return true;
   }
 }

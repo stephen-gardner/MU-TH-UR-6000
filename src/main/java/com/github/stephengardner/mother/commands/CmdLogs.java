@@ -2,6 +2,7 @@ package com.github.stephengardner.mother.commands;
 
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.data.LogEntry;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.io.File;
@@ -21,7 +22,8 @@ public class CmdLogs implements CommandExecutor {
 
   @Override
   @SuppressWarnings("Duplicates")
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     ArrayList<LogEntry> logs;
 
     if (args.length != 1) return false;
@@ -40,8 +42,7 @@ public class CmdLogs implements CommandExecutor {
 
     try {
       buildLogFile(logFile, logs);
-      mom.getSession()
-          .sendFile(mom.getConvChannel(), Files.readAllBytes(logFile.toPath()), fileName);
+      mom.getSession().sendFile(chan, Files.readAllBytes(logFile.toPath()), fileName);
     } catch (IOException e) {
       e.printStackTrace();
       logFile.delete();

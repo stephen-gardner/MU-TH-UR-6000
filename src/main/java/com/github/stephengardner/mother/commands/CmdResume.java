@@ -2,6 +2,7 @@ package com.github.stephengardner.mother.commands;
 
 import com.github.stephengardner.mother.Conversation;
 import com.github.stephengardner.mother.Mother;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.sql.SQLException;
@@ -15,7 +16,8 @@ public class CmdResume implements CommandExecutor {
   }
 
   @Override
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length != 1) return false;
 
     Conversation conv = mom.findConversation(args[0], false);

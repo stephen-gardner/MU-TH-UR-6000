@@ -31,8 +31,21 @@ public class DirectMessageListener implements SlackMessagePostedListener {
 
     if (!chan.isDirect()) {
       if (!mom.hasJoinedChannel(chan.getId())) {
-        s.sendMessage(chan, Msg.NO_GROUPS.toString());
+        mom.sendToChannel(chan, Msg.NO_GROUPS.toString());
         mom.addJoinedChannel(chan.getId());
+      }
+
+      return;
+    }
+
+    if (mom.getConvChannel().getMembers().contains(user)) {
+      if (ev.getMessageContent().startsWith("!")) {
+        mom.runCommands(ev, ev.getThreadTimestamp());
+      } else {
+        mom.sendToChannel(
+            chan,
+            String.format(Msg.IN_CONV_CHANNEL.toString(), "#" + mom.getConvChannel().getName()),
+            ev.getThreadTimestamp());
       }
 
       return;

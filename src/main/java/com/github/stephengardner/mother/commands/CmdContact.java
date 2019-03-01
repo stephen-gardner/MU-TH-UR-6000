@@ -3,6 +3,7 @@ package com.github.stephengardner.mother.commands;
 import com.github.stephengardner.mother.Conversation;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
+import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 public class CmdContact implements CommandExecutor {
@@ -15,13 +16,14 @@ public class CmdContact implements CommandExecutor {
 
   @Override
   @SuppressWarnings("Duplicates")
-  public boolean onCommand(SlackUser user, String[] args, String threadTimestamp) {
+  public boolean onCommand(
+      SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length != 1) return false;
 
     String dstUserID = Util.getTaggedUserID(args[0]);
     SlackUser dstUser = mom.getSession().findUserById(dstUserID);
 
-    if (dstUser == null) return false;
+    if (dstUser == null || mom.getConvChannel().getMembers().contains(dstUser)) return false;
 
     Conversation conv = mom.findConversationByUserID(dstUserID);
 
