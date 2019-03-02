@@ -44,7 +44,7 @@ public class DirectMessageListener implements SlackMessagePostedListener {
       } else {
         mom.sendToChannel(
             chan,
-            String.format(Msg.IN_CONV_CHANNEL.toString(), "#" + mom.getConvChannel().getName()),
+            String.format(Msg.IN_CONV_CHANNEL.toString(), mom.getConvChannel().getName()),
             ev.getThreadTimestamp());
       }
 

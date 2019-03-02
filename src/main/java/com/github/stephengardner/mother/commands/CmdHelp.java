@@ -34,7 +34,14 @@ public class CmdHelp implements CommandExecutor {
   @Override
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
-    if (args.length != 0) return false;
+    if (args.length > 1) return false;
+
+    if (args.length == 1) {
+      if (!help.containsKey(args[0])) return false;
+
+      mom.sendToChannel(chan, help.get(args[0]), threadTimestamp);
+      return true;
+    }
 
     ArrayList<String> commands = new ArrayList<>(mom.getCommands().keySet());
     StringBuilder sb = new StringBuilder();
