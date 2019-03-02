@@ -7,12 +7,27 @@ import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 public class CmdHelp implements CommandExecutor {
 
   private Mother mom;
+  private HashMap<String, String> help;
+
+  public CmdHelp() {
+    help = new HashMap<>();
+    help.put("active", Msg.HELP_ACTIVE.toString());
+    help.put("close", Msg.HELP_CLOSE.toString());
+    help.put("contact", Msg.HELP_CONTACT.toString());
+    help.put("history", Msg.HELP_HISTORY.toString());
+    help.put("logs", Msg.HELP_LOGS.toString());
+    help.put("reload", Msg.HELP_RELOAD.toString());
+    help.put("resume", Msg.HELP_RESUME.toString());
+    help.put("shutdown", Msg.HELP_SHUTDOWN.toString());
+  }
 
   public CmdHelp(Mother mom) {
+    this();
     this.mom = mom;
   }
 
@@ -23,7 +38,6 @@ public class CmdHelp implements CommandExecutor {
 
     ArrayList<String> commands = new ArrayList<>(mom.getCommands().keySet());
     StringBuilder sb = new StringBuilder();
-    boolean first = true;
 
     commands.remove("help");
 
@@ -33,17 +47,13 @@ public class CmdHelp implements CommandExecutor {
     }
 
     Collections.sort(commands);
+    sb.append(Msg.LIST_COMMANDS.toString());
 
     for (String cmd : commands) {
-      if (first) first = false;
-      else sb.append(", ");
-
-      sb.append(String.format("`%s`", cmd));
+      if (help.containsKey(cmd)) sb.append(help.get(cmd));
     }
 
-    String content = String.format(Msg.LIST_COMMANDS.toString(), sb.toString());
-
-    mom.sendToChannel(chan, content, threadTimestamp);
+    mom.sendToChannel(chan, sb.toString(), threadTimestamp);
     return true;
   }
 }
