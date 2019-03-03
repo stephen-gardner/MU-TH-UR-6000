@@ -5,6 +5,7 @@ import com.github.stephengardner.mother.data.Msg;
 import com.github.stephengardner.mother.listeners.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
+import com.ullink.slack.simpleslackapi.SlackPersona;
 
 import java.io.FileReader;
 
@@ -29,6 +30,7 @@ public class Main {
       try {
         Thread.sleep(mc.getTimeoutCheckInterval());
         mom.reapConversations(mc.getSessionTimeout());
+        mom.getSession().setPresence(SlackPersona.SlackPresence.ACTIVE);
       } catch (Exception e) {
         e.printStackTrace();
       }
