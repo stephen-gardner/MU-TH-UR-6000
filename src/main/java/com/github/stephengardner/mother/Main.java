@@ -5,7 +5,8 @@ import com.github.stephengardner.mother.data.Msg;
 import com.github.stephengardner.mother.listeners.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
-import com.ullink.slack.simpleslackapi.SlackPersona;
+import com.ullink.slack.simpleslackapi.SlackChannel;
+import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.io.FileReader;
 
@@ -26,11 +27,15 @@ public class Main {
     new EmojiRemovedListener(mom).registerEvent();
     new JoinedChannelListener(mom).registerEvent();
 
+    SlackUser user = mom.getSession().findUserById("USLACKBOT");
+    SlackChannel chan =
+        mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel();
+
     while (mom.isOnline()) {
       try {
         Thread.sleep(mc.getTimeoutCheckInterval());
         mom.reapConversations(mc.getSessionTimeout());
-        mom.getSession().setPresence(SlackPersona.SlackPresence.ACTIVE);
+        mom.getSession().sendTyping(chan); // Fool Slack into thinking bot is always active
       } catch (Exception e) {
         e.printStackTrace();
       }
