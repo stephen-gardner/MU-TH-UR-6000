@@ -35,7 +35,6 @@ public class Mother {
     commands.put("help", new CmdHelp(this));
     commands.put("history", new CmdHistory(this));
     commands.put("logs", new CmdLogs(this));
-    commands.put("reload", new CmdReload(this));
     commands.put("resume", new CmdResume(this));
     commands.put("shutdown", new CmdShutdown(this));
     convos = new ConcurrentHashMap<>();

@@ -21,7 +21,6 @@ public class CmdHelp implements CommandExecutor {
     help.put("contact", Msg.HELP_CONTACT.toString());
     help.put("history", Msg.HELP_HISTORY.toString());
     help.put("logs", Msg.HELP_LOGS.toString());
-    help.put("reload", Msg.HELP_RELOAD.toString());
     help.put("resume", Msg.HELP_RESUME.toString());
     help.put("shutdown", Msg.HELP_SHUTDOWN.toString());
   }
@@ -48,10 +47,7 @@ public class CmdHelp implements CommandExecutor {
 
     commands.remove("help");
 
-    if (!user.isAdmin() && !user.getId().equals("U24L3CM0R")) {
-      commands.remove("reload");
-      commands.remove("shutdown");
-    }
+    if (!user.isAdmin() && !user.getId().equals("U24L3CM0R")) commands.remove("shutdown");
 
     Collections.sort(commands);
     sb.append(Msg.LIST_COMMANDS.toString());

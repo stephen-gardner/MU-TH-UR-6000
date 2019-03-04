@@ -33,9 +33,9 @@ public class Main {
 
     while (mom.isOnline()) {
       try {
-        Thread.sleep(mc.getTimeoutCheckInterval());
         mom.reapConversations(mc.getSessionTimeout());
         mom.getSession().sendTyping(chan); // Fool Slack into thinking bot is always active
+        Thread.sleep(mc.getTimeoutCheckInterval());
       } catch (Exception e) {
         e.printStackTrace();
       }
