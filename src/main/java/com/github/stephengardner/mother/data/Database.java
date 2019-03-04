@@ -52,11 +52,12 @@ public class Database {
     return conv;
   }
 
-  public ArrayList<LogEntry> lookupLogs(String threadID) throws SQLException {
+  public ArrayList<LogEntry> lookupLogs(String id, boolean isUser) throws SQLException {
     ArrayList<LogEntry> logs = new ArrayList<>();
-    PreparedStatement ps = conn.prepareStatement(SQL.LOOKUP_LOGS_THREAD.toString());
+    SQL sql = (isUser) ? SQL.LOOKUP_LOGS_USER : SQL.LOOKUP_LOGS_THREAD;
+    PreparedStatement ps = conn.prepareStatement(sql.toString());
 
-    ps.setString(1, threadID);
+    ps.setString(1, id);
 
     ResultSet rs = ps.executeQuery();
 

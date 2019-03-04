@@ -1,6 +1,7 @@
 package com.github.stephengardner.mother.commands;
 
 import com.github.stephengardner.mother.Mother;
+import com.github.stephengardner.mother.Util;
 import com.github.stephengardner.mother.data.LogEntry;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
@@ -29,7 +30,13 @@ public class CmdLogs implements CommandExecutor {
     if (args.length != 1) return false;
 
     try {
-      logs = mom.getDatabase().lookupLogs(args[0]);
+      String id = Util.getTaggedUserID(args[0]);
+
+      if (id != null) {
+        logs = mom.getDatabase().lookupLogs(id, true);
+      } else {
+        logs = mom.getDatabase().lookupLogs(args[0], false);
+      }
     } catch (SQLException e) {
       e.printStackTrace();
       return false;
