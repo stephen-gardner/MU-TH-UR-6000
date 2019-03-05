@@ -129,9 +129,19 @@ public class Mother {
       it.remove();
       conv.sendToUser(Msg.SESSION_EXPIRED_DIRECT.toString());
       conv.sendToThread(
-          String.format(Msg.SESSION_EXPIRED_CHAN.toString(), conv.getThreadTimestamp()));
+          String.format(Msg.SESSION_EXPIRED_CONV.toString(), conv.getThreadTimestamp()));
       db.saveMessages(conv);
     }
+  }
+
+  public void startConversation(SlackUser user, String directChanID, boolean notifyUser) {
+    String notice = String.format(Msg.SESSION_NOTICE.toString(), user.getUserName());
+    String threadTimestamp = sendToConvChannel(notice).getTimestamp();
+    Conversation conv = new Conversation(this, user.getId(), directChanID, threadTimestamp);
+
+    if (notifyUser) conv.sendToUser(Msg.SESSION_START.toString());
+
+    addConversation(directChanID, conv);
   }
 
   public void runCommands(SlackMessagePosted ev, String threadTimestamp) {
@@ -152,16 +162,6 @@ public class Mother {
     }
 
     session.addReactionToMessage(ev.getChannel(), ev.getTimeStamp(), Msg.REACT_UNKNOWN.toString());
-  }
-
-  public void startConversation(SlackUser user, String directChanID, boolean notifyUser) {
-    String notice = String.format(Msg.SESSION_NOTICE.toString(), user.getUserName());
-    String threadTimestamp = sendToConvChannel(notice).getTimestamp();
-    Conversation conv = new Conversation(this, user.getId(), directChanID, threadTimestamp);
-
-    if (notifyUser) conv.sendToUser(Msg.SESSION_START.toString());
-
-    addConversation(directChanID, conv);
   }
 
   public SlackMessageReply sendToChannel(SlackChannel chan, String msg) {

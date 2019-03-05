@@ -5,7 +5,7 @@ import java.util.HashMap;
 public class MotherConfig {
 
   private String authToken;
-  private String convChanID;
+  private String convChannelID;
   private String dbPath;
   private long sessionTimeout;
   private long timeoutCheckInterval;
@@ -24,8 +24,8 @@ public class MotherConfig {
     return lang.get(key);
   }
 
-  public String getConvChanID() {
-    return convChanID;
+  public String getConvChannelID() {
+    return convChannelID;
   }
 
   public long getSessionTimeout() {

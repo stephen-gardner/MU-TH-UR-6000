@@ -28,7 +28,6 @@ public class CmdLogs implements CommandExecutor {
   }
 
   @Override
-  @SuppressWarnings("Duplicates")
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     ArrayList<LogEntry> logs;
@@ -38,7 +37,6 @@ public class CmdLogs implements CommandExecutor {
     String id = Util.getTaggedUserID(args[0]);
 
     try {
-
       if (id != null) {
         logs = mom.getDatabase().lookupLogs(id, true);
         id = mom.getSession().findUserById(id).getUserName();

@@ -43,7 +43,7 @@ public class Database {
     Conversation prev = mom.addConversation(conv.getDirectChannelID(), conv);
 
     if (prev == null) {
-      conv.sendToThread(Msg.SESSION_RESUME_CHAN.toString());
+      conv.sendToThread(Msg.SESSION_RESUME_CONV.toString());
       conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
     }
 

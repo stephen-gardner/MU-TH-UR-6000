@@ -17,7 +17,7 @@ public class Main {
   public static void main(String[] args) {
     loadConfig();
 
-    final Mother mom = new Mother(mc.getAuthToken(), mc.getConvChanID(), mc.getDbPath());
+    final Mother mom = new Mother(mc.getAuthToken(), mc.getConvChannelID(), mc.getDbPath());
 
     new DirectMessageListener(mom).registerEvent();
     new ChanMessageListener(mom).registerEvent();
@@ -33,8 +33,8 @@ public class Main {
 
     while (mom.isOnline()) {
       try {
-        mom.reapConversations(mc.getSessionTimeout());
         mom.getSession().sendTyping(chan); // Fool Slack into thinking bot is always active
+        mom.reapConversations(mc.getSessionTimeout());
         Thread.sleep(mc.getTimeoutCheckInterval());
       } catch (Exception e) {
         e.printStackTrace();

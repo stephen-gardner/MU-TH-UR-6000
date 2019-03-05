@@ -15,7 +15,6 @@ public class CmdContact implements CommandExecutor {
   }
 
   @Override
-  @SuppressWarnings("Duplicates")
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length != 1) return false;

@@ -56,9 +56,9 @@ public class DirectMessageListener implements SlackMessagePostedListener {
     Conversation conv = mom.getConversation(chan.getId());
     String content =
         String.format(Msg.MESSAGE_COPY_FMT.toString(), user.getId(), ev.getMessageContent());
-    String chanTimestamp = conv.sendToThread(content).getTimestamp();
-    LogEntry log = new LogEntry(user.getId(), ev.getMessageContent(), chanTimestamp, true);
+    String convTimestamp = conv.sendToThread(content).getTimestamp();
+    LogEntry log = new LogEntry(user.getId(), ev.getMessageContent(), convTimestamp, true);
 
-    conv.addLog(ev.getTimestamp(), chanTimestamp, log);
+    conv.addLog(ev.getTimestamp(), convTimestamp, log);
   }
 }

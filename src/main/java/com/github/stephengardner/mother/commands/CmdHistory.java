@@ -18,7 +18,6 @@ public class CmdHistory implements CommandExecutor {
   }
 
   @Override
-  @SuppressWarnings("Duplicates")
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     ArrayList<String> threads;

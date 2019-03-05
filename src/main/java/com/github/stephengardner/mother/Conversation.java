@@ -16,14 +16,14 @@ public class Conversation {
   private String directChanID;
   private String threadTimestamp;
   private HashMap<String, LogEntry> logs;
-  private HashMap<String, String> chanIndex;
+  private HashMap<String, String> convIndex;
   private HashMap<String, String> directIndex;
   private ArrayList<LogEntry> editedLogs;
   private long lastUpdate;
 
   private Conversation() {
     logs = new HashMap<>();
-    chanIndex = new HashMap<>();
+    convIndex = new HashMap<>();
     directIndex = new HashMap<>();
     editedLogs = new ArrayList<>();
   }
@@ -40,7 +40,7 @@ public class Conversation {
   public boolean hasLog(String timestamp) {
     return timestamp.equals(threadTimestamp)
         || directIndex.containsKey(timestamp)
-        || chanIndex.containsKey(timestamp);
+        || convIndex.containsKey(timestamp);
   }
 
   public ArrayList<LogEntry> getLogs() {
@@ -51,13 +51,13 @@ public class Conversation {
     return allLogs;
   }
 
-  public void addLog(String directTimestamp, String chanTimestamp, LogEntry log) {
+  public void addLog(String directTimestamp, String convTimestamp, LogEntry log) {
     LogEntry prev = logs.put(directTimestamp, log);
 
     if (prev != null) editedLogs.add(prev);
 
-    directIndex.put(directTimestamp, chanTimestamp);
-    chanIndex.put(chanTimestamp, directTimestamp);
+    directIndex.put(directTimestamp, convTimestamp);
+    convIndex.put(convTimestamp, directTimestamp);
     update();
   }
 
@@ -95,16 +95,17 @@ public class Conversation {
 
   public void setReaction(String timestamp, String emojiCode, boolean isDirect, boolean removed) {
     SlackChannel chan;
-    BidiMessage bm;
-
-    if ((bm = getBidiMessage(timestamp, isDirect)) == null) return;
 
     if (isDirect) {
+      if (!directIndex.containsKey(timestamp)) return;
+
+      timestamp = directIndex.get(timestamp);
       chan = mom.getConvChannel();
-      timestamp = bm.getChanTimestamp();
     } else {
+      if (!convIndex.containsKey(timestamp)) return;
+
+      timestamp = convIndex.get(timestamp);
       chan = getDirectChannel();
-      timestamp = bm.getDirectTimestamp();
     }
 
     if (removed) {
@@ -117,20 +118,27 @@ public class Conversation {
   }
 
   public void updateMessage(String timestamp, String content, boolean isDirect) {
-    SlackChannel chan;
     String userID;
-    BidiMessage bm;
-
-    if ((bm = getBidiMessage(timestamp, isDirect)) == null) return;
+    String directTimestamp;
+    String convTimestamp;
+    SlackChannel chan;
 
     if (isDirect) {
-      chan = mom.getConvChannel();
+      if (!directIndex.containsKey(timestamp)) return;
+
+      convTimestamp = directIndex.get(timestamp);
+      directTimestamp = timestamp;
+      timestamp = convTimestamp;
       userID = getUserID();
-      timestamp = bm.getChanTimestamp();
+      chan = mom.getConvChannel();
     } else {
+      if (!convIndex.containsKey(timestamp)) return;
+
+      convTimestamp = timestamp;
+      directTimestamp = convIndex.get(timestamp);
+      timestamp = directTimestamp;
+      userID = logs.get(directTimestamp).getUserID();
       chan = getDirectChannel();
-      userID = logs.get(bm.getDirectTimestamp()).getUserID();
-      timestamp = bm.getDirectTimestamp();
     }
 
     String tagged = String.format(Msg.MESSAGE_COPY_FMT.toString(), userID, content);
@@ -138,22 +146,7 @@ public class Conversation {
     if (mom.getSession().updateMessage(timestamp, chan, tagged).getReply().getTimestamp() == null)
       return;
 
-    addLog(
-        bm.getDirectTimestamp(),
-        bm.getChanTimestamp(),
-        new LogEntry(userID, content, bm.getChanTimestamp(), false));
-  }
-
-  private BidiMessage getBidiMessage(String timestamp, boolean isDirect) {
-    if (isDirect) {
-      if (!directIndex.containsKey(timestamp)) return null;
-
-      return new BidiMessage(timestamp, directIndex.get(timestamp));
-    }
-
-    if (!chanIndex.containsKey(timestamp)) return null;
-
-    return new BidiMessage(chanIndex.get(timestamp), timestamp);
+    addLog(directTimestamp, convTimestamp, new LogEntry(userID, content, convTimestamp, false));
   }
 
   public void expire() {
