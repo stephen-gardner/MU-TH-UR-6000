@@ -47,7 +47,7 @@ public class CmdHelp implements CommandExecutor {
 
     commands.remove("help");
 
-    if (!user.isAdmin() && !user.getId().equals("U24L3CM0R")) commands.remove("shutdown");
+    if (!user.isAdmin()) commands.remove("shutdown");
 
     Collections.sort(commands);
     sb.append(Msg.LIST_COMMANDS.toString());

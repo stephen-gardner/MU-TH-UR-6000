@@ -15,7 +15,7 @@ public class CmdShutdown implements CommandExecutor {
   @Override
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
-    if (args.length == 0 && (user.isAdmin() || user.getId().equals("U24L3CM0R"))) {
+    if (args.length == 0 && user.isAdmin()) {
       mom.shutdown();
       return true;
     }

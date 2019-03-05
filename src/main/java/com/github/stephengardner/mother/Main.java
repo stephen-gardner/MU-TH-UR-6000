@@ -4,11 +4,15 @@ import com.github.stephengardner.mother.data.MotherConfig;
 import com.github.stephengardner.mother.data.Msg;
 import com.github.stephengardner.mother.listeners.*;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Main {
 
@@ -46,21 +50,33 @@ public class Main {
     return mc;
   }
 
-  public static void loadConfig() {
-    String configFile = "config.json";
+  private static void loadConfig() {
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    File config = new File("config.json");
 
     try {
-      FileReader reader = new FileReader(configFile);
+      if (!config.exists()) {
+        FileWriter writer = new FileWriter(config);
+
+        mc = new MotherConfig();
+        mc.initDefaults();
+        writer.write(gson.toJson(mc));
+        writer.close();
+        System.out.println(String.format("%s generated", config.getName()));
+        System.exit(0);
+      }
+
+      FileReader reader = new FileReader(config);
 
       mc = new Gson().fromJson(new JsonParser().parse(reader), MotherConfig.class);
       reader.close();
-    } catch (Exception e) {
+    } catch (IOException e) {
       e.printStackTrace();
       System.exit(1);
     }
 
     if (mc == null) {
-      System.err.println(String.format(Msg.CONFIG_ERROR.toString(), configFile));
+      System.err.println(String.format(Msg.CONFIG_ERROR.toString(), config));
       System.exit(1);
     }
   }
