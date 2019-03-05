@@ -109,7 +109,7 @@ public class Database {
       ps.setString(1, log.getUserID());
       ps.setString(2, conv.getThreadTimestamp());
       ps.setString(3, log.getMessage());
-      ps.setString(4, log.getChanTimestamp());
+      ps.setString(4, log.getTimestamp());
       ps.setBoolean(5, log.isOriginal());
       ps.addBatch();
     }

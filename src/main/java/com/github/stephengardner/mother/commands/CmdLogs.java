@@ -3,6 +3,7 @@ package com.github.stephengardner.mother.commands;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
 import com.github.stephengardner.mother.data.LogEntry;
+import com.github.stephengardner.mother.data.Msg;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
@@ -11,7 +12,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class CmdLogs implements CommandExecutor {
 
@@ -29,13 +35,16 @@ public class CmdLogs implements CommandExecutor {
 
     if (args.length != 1) return false;
 
+    String id = Util.getTaggedUserID(args[0]);
+
     try {
-      String id = Util.getTaggedUserID(args[0]);
 
       if (id != null) {
         logs = mom.getDatabase().lookupLogs(id, true);
+        id = mom.getSession().findUserById(id).getUserName();
       } else {
         logs = mom.getDatabase().lookupLogs(args[0], false);
+        id = args[0];
       }
     } catch (SQLException e) {
       e.printStackTrace();
@@ -44,7 +53,7 @@ public class CmdLogs implements CommandExecutor {
 
     if (logs.isEmpty()) return false;
 
-    String fileName = String.format("log-%s.txt", args[0]);
+    String fileName = String.format("log-%s.txt", id);
     File logFile = new File(fileName);
 
     try {
@@ -62,12 +71,17 @@ public class CmdLogs implements CommandExecutor {
 
   private void buildLogFile(File logFile, ArrayList<LogEntry> logs) throws IOException {
     FileWriter fw = new FileWriter(logFile);
+    DateFormat df = new SimpleDateFormat(Msg.LOG_TIMESTAMP_FMT.toString());
+
+    df.setTimeZone(TimeZone.getTimeZone(Msg.LOG_TIMESTAMP_ZONE.toString()));
 
     for (LogEntry log : logs) {
+      Msg fmt = (log.isOriginal()) ? Msg.LOG : Msg.LOG_EDITED;
       String userName = mom.getSession().findUserById(log.getUserID()).getUserName();
+      long epoch = Long.parseLong(log.getTimestamp().split("\\.")[0]);
+      Date date = Date.from(Instant.ofEpochSecond(epoch));
 
-      if (log.isOriginal()) fw.write(String.format("%s: %s\n", userName, log.getMessage()));
-      else fw.write(String.format("%s: %s (edited)\n", userName, log.getMessage()));
+      fw.write(String.format(fmt.toString(), df.format(date), userName, log.getMessage()));
     }
 
     fw.close();

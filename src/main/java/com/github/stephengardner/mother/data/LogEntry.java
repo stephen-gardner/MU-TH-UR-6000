@@ -4,13 +4,13 @@ public class LogEntry {
 
   private final String userID;
   private final String message;
-  private final String chanTimestamp;
+  private final String timestamp;
   private final boolean original;
 
-  public LogEntry(String userID, String message, String chanTimestamp, boolean original) {
+  public LogEntry(String userID, String message, String timestamp, boolean original) {
     this.userID = userID;
     this.message = message;
-    this.chanTimestamp = chanTimestamp;
+    this.timestamp = timestamp;
     this.original = original;
   }
 
@@ -22,8 +22,8 @@ public class LogEntry {
     return message;
   }
 
-  public String getChanTimestamp() {
-    return chanTimestamp;
+  public String getTimestamp() {
+    return timestamp;
   }
 
   public String getUserID() {
