@@ -146,22 +146,22 @@ public class Mother {
 
   public void runCommands(SlackMessagePosted ev, String threadTimestamp) {
     String[] args = ev.getMessageContent().trim().split("\\s+");
+    String cmdName = args[0].substring(1).toLowerCase();
+    CommandExecutor cmd = commands.get(cmdName);
 
-    for (String cmdName : commands.keySet()) {
-      if (args[0].equalsIgnoreCase("!" + cmdName)) {
-        String[] cmdArgs = Arrays.copyOfRange(args, 1, args.length);
-        CommandExecutor cmd = commands.get(cmdName);
-        boolean success = cmd.onCommand(ev.getChannel(), ev.getUser(), cmdArgs, threadTimestamp);
-
-        session.addReactionToMessage(
-            ev.getChannel(),
-            ev.getTimeStamp(),
-            (success) ? Msg.REACT_SUCCESS.toString() : Msg.REACT_FAILURE.toString());
-        return;
-      }
+    if (cmd == null) {
+      session.addReactionToMessage(
+          ev.getChannel(), ev.getTimeStamp(), Msg.REACT_UNKNOWN.toString());
+      return;
     }
 
-    session.addReactionToMessage(ev.getChannel(), ev.getTimeStamp(), Msg.REACT_UNKNOWN.toString());
+    String[] cmdArgs = Arrays.copyOfRange(args, 1, args.length);
+    boolean success = cmd.onCommand(ev.getChannel(), ev.getUser(), cmdArgs, threadTimestamp);
+
+    session.addReactionToMessage(
+        ev.getChannel(),
+        ev.getTimeStamp(),
+        (success) ? Msg.REACT_SUCCESS.toString() : Msg.REACT_FAILURE.toString());
   }
 
   public SlackMessageReply sendToChannel(SlackChannel chan, String msg) {
