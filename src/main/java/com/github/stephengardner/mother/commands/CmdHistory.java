@@ -58,10 +58,12 @@ public class CmdHistory implements CommandExecutor {
 
     sb.append(String.format(Msg.LIST_THREADS.toString(), userID, page));
 
-    for (String threadLink : threads) {
+    for (String threadID : threads) {
       if (empty) empty = false;
 
-      sb.append(">").append(threadLink).append("\n");
+      sb.append(">")
+          .append(Util.getThreadLink(mom.getSession(), mom.getConvChannelID(), threadID))
+          .append("\n");
     }
 
     if (empty) sb.append(Msg.LIST_NONE.toString());

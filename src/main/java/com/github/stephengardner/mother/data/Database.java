@@ -3,7 +3,6 @@ package com.github.stephengardner.mother.data;
 import com.github.stephengardner.mother.Conversation;
 import com.github.stephengardner.mother.Main;
 import com.github.stephengardner.mother.Mother;
-import com.github.stephengardner.mother.Util;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.io.File;
@@ -85,11 +84,7 @@ public class Database {
 
     ResultSet rs = ps.executeQuery();
 
-    while (rs.next()) {
-      String threadID = rs.getString("thread_id");
-
-      threads.add(Util.getThreadLink(mom.getSession(), mom.getConvChannel().getId(), threadID));
-    }
+    while (rs.next()) threads.add(rs.getString("thread_id"));
 
     rs.close();
     ps.close();

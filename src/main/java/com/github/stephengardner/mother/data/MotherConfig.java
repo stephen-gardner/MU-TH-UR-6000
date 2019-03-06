@@ -60,7 +60,7 @@ public class MotherConfig {
         "HELP_LOGS", ">`logs @user/thread_id` - Upload logs associated with user or thread ID\n");
     lang.put(
         "HELP_RESUME",
-        ">`resume thread_id` - Resume conversation under thread ID in a new thread\n");
+        ">`resume @user/thread_id` - Resume conversation under a new thread\n");
     lang.put("HELP_SHUTDOWN", ">`shutdown` - Disconnect bot\n");
     lang.put(
         "IN_CONV_CHANNEL",
