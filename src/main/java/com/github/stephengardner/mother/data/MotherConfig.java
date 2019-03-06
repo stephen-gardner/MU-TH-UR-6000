@@ -52,7 +52,7 @@ public class MotherConfig {
     lang.put("ACTIVE_INFO", ">%s (*<@%s>*)\n");
     lang.put("CONFIG_ERROR", "Error: %s is missing or invalid");
     lang.put("HELP_ACTIVE", ">`active` - List active conversations\n");
-    lang.put("HELP_CLOSE", ">`close @user` - End active conversation with user\n");
+    lang.put("HELP_CLOSE", ">`close @user/thread_id` - End active conversation\n");
     lang.put("HELP_CONTACT", ">`contact @user` - Start conversation with user\n");
     lang.put(
         "HELP_HISTORY", ">`history @user [page]` - List thread IDs of conversations with user\n");

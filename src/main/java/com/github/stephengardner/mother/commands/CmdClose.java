@@ -20,14 +20,20 @@ public class CmdClose implements CommandExecutor {
   @Override
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
+    Conversation conv = null;
+
     if (args.length != 1) return false;
 
-    String dstUserID = Util.getTaggedUserID(args[0]);
-    SlackUser dstUser = mom.getSession().findUserById(dstUserID);
+    if (args[0].contains(".")) {
+      conv = mom.findConversation(args[0], false);
+    } else {
+      String dstUserID = Util.getTaggedUserID(args[0]);
+      SlackUser dstUser = mom.getSession().findUserById(dstUserID);
 
-    if (dstUser == null) return false;
+      if (dstUser == null) return false;
 
-    Conversation conv = mom.findConversationByUserID(dstUserID);
+      conv = mom.findConversationByUserID(dstUserID);
+    }
 
     if (conv == null) return false;
 
