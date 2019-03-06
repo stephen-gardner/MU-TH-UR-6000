@@ -223,14 +223,15 @@ public class Mother {
   }
 
   public void shutdown() {
+    online.compareAndSet(true, false);
+
     try {
       session.disconnect();
       reapConversations(0L);
       db.close();
     } catch (Exception e) {
       e.printStackTrace();
+      System.exit(1);
     }
-
-    online.compareAndSet(true, false);
   }
 }

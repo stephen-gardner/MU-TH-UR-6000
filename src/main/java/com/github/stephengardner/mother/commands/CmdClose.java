@@ -20,7 +20,7 @@ public class CmdClose implements CommandExecutor {
   @Override
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
-    Conversation conv = null;
+    Conversation conv;
 
     if (args.length != 1) return false;
 

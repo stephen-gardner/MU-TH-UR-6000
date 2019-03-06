@@ -14,7 +14,7 @@ public class CmdHelp implements CommandExecutor {
   private Mother mom;
   private HashMap<String, String> help;
 
-  public CmdHelp() {
+  private CmdHelp() {
     help = new HashMap<>();
     help.put("active", Msg.HELP_ACTIVE.toString());
     help.put("close", Msg.HELP_CLOSE.toString());

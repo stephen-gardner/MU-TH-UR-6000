@@ -21,6 +21,7 @@ public class Database {
 
   public Conversation loadConversation(String threadTimestamp) throws SQLException {
     PreparedStatement ps = conn.prepareStatement(SQL.FIND_THREAD_INDEX.toString());
+    Conversation conv = null;
 
     ps.setString(1, threadTimestamp);
 
@@ -33,17 +34,21 @@ public class Database {
     }
 
     SlackUser user = mom.getSession().findUserById(rs.getString("user_id"));
-    Conversation conv =
-        new Conversation(
-            mom,
-            user.getId(),
-            mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel().getId(),
-            threadTimestamp);
-    Conversation prev = mom.addConversation(conv.getDirectChannelID(), conv);
 
-    if (prev == null) {
-      conv.sendToThread(Msg.SESSION_RESUME_CONV.toString());
-      conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
+    if (!mom.getConvChannel().getMembers().contains(user)) {
+      conv =
+          new Conversation(
+              mom,
+              user.getId(),
+              mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel().getId(),
+              threadTimestamp);
+
+      Conversation prev = mom.addConversation(conv.getDirectChannelID(), conv);
+
+      if (prev == null) {
+        conv.sendToThread(Msg.SESSION_RESUME_CONV.toString());
+        conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
+      }
     }
 
     rs.close();
