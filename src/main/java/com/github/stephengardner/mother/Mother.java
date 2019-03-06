@@ -135,7 +135,7 @@ public class Mother {
   }
 
   public void startConversation(SlackUser user, String directChanID, boolean notifyUser) {
-    String notice = String.format(Msg.SESSION_NOTICE.toString(), user.getUserName());
+    String notice = String.format(Msg.SESSION_NOTICE.toString(), user.getId());
     String threadTimestamp = sendToConvChannel(notice).getTimestamp();
     Conversation conv = new Conversation(this, user.getId(), directChanID, threadTimestamp);
 

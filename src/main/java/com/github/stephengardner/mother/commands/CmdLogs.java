@@ -39,7 +39,7 @@ public class CmdLogs implements CommandExecutor {
     try {
       if (id != null) {
         logs = mom.getDatabase().lookupLogs(id, true);
-        id = mom.getSession().findUserById(id).getUserName();
+        id = mom.getSession().findUserById(id).getRealName().replaceAll(" ", "_").toLowerCase();
       } else {
         logs = mom.getDatabase().lookupLogs(args[0], false);
         id = args[0];
@@ -75,11 +75,11 @@ public class CmdLogs implements CommandExecutor {
 
     for (LogEntry log : logs) {
       Msg fmt = (log.isOriginal()) ? Msg.LOG : Msg.LOG_EDITED;
-      String userName = mom.getSession().findUserById(log.getUserID()).getUserName();
+      String name = mom.getSession().findUserById(log.getUserID()).getRealName();
       long epoch = Long.parseLong(log.getTimestamp().split("\\.")[0]);
       Date date = Date.from(Instant.ofEpochSecond(epoch));
 
-      fw.write(String.format(fmt.toString(), df.format(date), userName, log.getMessage()));
+      fw.write(String.format(fmt.toString(), df.format(date), name, log.getMessage()));
     }
 
     fw.close();
