@@ -31,11 +31,12 @@ public class CmdResume implements CommandExecutor {
         conv = mom.getDatabase().loadConversation(args[0]);
       } else {
         String dstUserID = Util.getTaggedUserID(args[0]);
+
+        if (mom.inConvChannel(dstUserID)) return false;
+
         SlackUser dstUser = mom.getSession().findUserById(dstUserID);
 
-        if (dstUser == null
-            || mom.getConvChannel().getMembers().contains(dstUser)
-            || mom.findConversationByUserID(dstUserID) != null) return false;
+        if (dstUser == null || mom.findConversationByUserID(dstUserID) != null) return false;
 
         ArrayList<String> threads = mom.getDatabase().lookupThreads(dstUserID, 1);
 

@@ -35,17 +35,10 @@ public class Database {
 
     SlackUser user = mom.getSession().findUserById(rs.getString("user_id"));
 
-    if (!mom.getConvChannel().getMembers().contains(user)) {
-      conv =
-          new Conversation(
-              mom,
-              user.getId(),
-              mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel().getId(),
-              threadTimestamp);
+    if (!mom.inConvChannel(user.getId())) {
+      conv = new Conversation(mom, user.getId(), mom.getUserChannel(user).getId(), threadTimestamp);
 
-      Conversation prev = mom.addConversation(conv.getDirectChannelID(), conv);
-
-      if (prev == null) {
+      if (mom.addConversation(conv.getDirectChannelID(), conv) == null) {
         conv.sendToThread(Msg.SESSION_RESUME_CONV.toString());
         conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
       }

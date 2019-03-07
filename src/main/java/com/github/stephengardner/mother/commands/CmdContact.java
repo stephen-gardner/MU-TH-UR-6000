@@ -20,9 +20,12 @@ public class CmdContact implements CommandExecutor {
     if (args.length != 1) return false;
 
     String dstUserID = Util.getTaggedUserID(args[0]);
+
+    if (mom.inConvChannel(dstUserID)) return false;
+
     SlackUser dstUser = mom.getSession().findUserById(dstUserID);
 
-    if (dstUser == null || mom.getConvChannel().getMembers().contains(dstUser)) return false;
+    if (dstUser == null) return false;
 
     Conversation conv = mom.findConversationByUserID(dstUserID);
 

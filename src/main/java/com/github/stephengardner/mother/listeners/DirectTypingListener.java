@@ -24,7 +24,7 @@ public class DirectTypingListener implements UserTypingListener {
 
     if (!ev.getChannel().isDirect()
         || s.sessionPersona().getId().equals(user.getId())
-        || mom.getConvChannel().getMembers().contains(user)) return;
+        || mom.inConvChannel(user.getId())) return;
 
     s.sendTyping(mom.getConvChannel());
   }

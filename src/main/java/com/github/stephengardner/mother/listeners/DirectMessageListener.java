@@ -38,7 +38,7 @@ public class DirectMessageListener implements SlackMessagePostedListener {
       return;
     }
 
-    if (mom.getConvChannel().getMembers().contains(user)) {
+    if (mom.inConvChannel(user.getId())) {
       if (ev.getMessageContent().startsWith("!")) {
         mom.runCommands(ev, ev.getThreadTimestamp());
       } else {

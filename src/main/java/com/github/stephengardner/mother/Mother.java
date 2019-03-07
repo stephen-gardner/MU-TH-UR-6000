@@ -20,7 +20,7 @@ public class Mother {
 
   private Database db;
   private SlackSession session;
-  private SlackChannel convChannel;
+  private String convChannelID;
   private ArrayList<String> joinedChannels;
   private HashMap<String, CommandExecutor> commands;
   private ConcurrentHashMap<String, Conversation> convos;
@@ -41,14 +41,14 @@ public class Mother {
     online = new AtomicBoolean(true);
   }
 
-  public Mother(String authToken, String privateChanID, String dbPath) {
+  public Mother(String authToken, String convChannelID, String dbPath) {
     this();
 
     try {
       db = new Database(this, dbPath);
       session = SlackSessionFactory.createWebSocketSlackSession(authToken);
       session.connect();
-      convChannel = session.findChannelById(privateChanID);
+      this.convChannelID = convChannelID;
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
@@ -66,11 +66,11 @@ public class Mother {
       prev.sendToThread(
           String.format(
               Msg.SESSION_CONTEXT_SWITCHED_TO.toString(),
-              Util.getThreadLink(getSession(), convChannel.getId(), conv.getThreadTimestamp())));
+              Util.getThreadLink(getSession(), convChannelID, conv.getThreadTimestamp())));
       conv.sendToThread(
           String.format(
               Msg.SESSION_CONTEXT_SWITCHED_FROM.toString(),
-              Util.getThreadLink(getSession(), convChannel.getId(), prev.getThreadTimestamp())));
+              Util.getThreadLink(getSession(), convChannelID, prev.getThreadTimestamp())));
 
       try {
         db.saveMessages(prev);
@@ -169,7 +169,7 @@ public class Mother {
   }
 
   public SlackMessageReply sendToConvChannel(String msg) {
-    return sendToChannel(convChannel, msg);
+    return sendToChannel(getConvChannel(), msg);
   }
 
   public SlackMessageReply sendToChannel(SlackChannel chan, String msg, String threadTimestamp) {
@@ -183,15 +183,23 @@ public class Mother {
   }
 
   public SlackMessageReply sendToConvChannel(String msg, String threadTimestamp) {
-    return sendToChannel(convChannel, msg, threadTimestamp);
+    return sendToChannel(getConvChannel(), msg, threadTimestamp);
   }
 
   public SlackChannel getConvChannel() {
-    return convChannel;
+    return session.findChannelById(convChannelID);
   }
 
   public String getConvChannelID() {
-    return convChannel.getId();
+    return convChannelID;
+  }
+
+  public boolean inConvChannel(String userID) {
+    for (SlackUser user : getConvChannel().getMembers()) {
+      if (user.getId().equals(userID)) return true;
+    }
+
+    return false;
   }
 
   public SlackChannel getUserChannel(SlackUser user) {
