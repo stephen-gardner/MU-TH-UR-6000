@@ -7,6 +7,8 @@ import com.github.stephengardner.mother.data.Msg;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
+import java.util.Collection;
+
 public class CmdActive implements CommandExecutor {
 
   private Mother mom;
@@ -20,21 +22,19 @@ public class CmdActive implements CommandExecutor {
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
     if (args.length != 0) return false;
 
+    Collection<Conversation> convos = mom.getAllConversations();
     StringBuilder sb = new StringBuilder();
-    boolean empty = true;
 
     sb.append(Msg.ACTIVE_CONVS.toString());
 
-    for (Conversation conv : mom.getAllConversations()) {
-      if (empty) empty = false;
-
+    for (Conversation conv : convos) {
       String link =
           Util.getThreadLink(mom.getSession(), mom.getConvChannelID(), conv.getThreadTimestamp());
 
       sb.append(String.format(Msg.ACTIVE_INFO.toString(), link, conv.getUserID()));
     }
 
-    if (empty) sb.append(Msg.LIST_NONE.toString());
+    if (convos.isEmpty()) sb.append(Msg.LIST_NONE.toString());
 
     mom.sendToChannel(chan, sb.toString(), threadTimestamp);
     return true;

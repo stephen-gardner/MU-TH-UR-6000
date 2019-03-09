@@ -46,7 +46,7 @@ public class MotherConfig {
     dbPath = "messages.db";
     sessionTimeout = 1800000;
     timeoutCheckInterval = 60000;
-    threadsPerPage = 25;
+    threadsPerPage = 10;
     lang = new HashMap<>();
     lang.put("ACTIVE_CONVS", "*Active conversations:*\n");
     lang.put("ACTIVE_INFO", ">%s (*<@%s>*)\n");
@@ -55,19 +55,20 @@ public class MotherConfig {
     lang.put("HELP_CLOSE", ">`close @user/thread_id` - End active conversation\n");
     lang.put("HELP_CONTACT", ">`contact @user` - Start conversation with user\n");
     lang.put(
-        "HELP_HISTORY", ">`history @user [page]` - List thread IDs of conversations with user\n");
+        "HELP_HISTORY", ">`history [@user] [page]` - List thread IDs of recent conversations\n");
     lang.put(
         "HELP_LOGS", ">`logs @user/thread_id` - Upload logs associated with user or thread ID\n");
-    lang.put(
-        "HELP_RESUME",
-        ">`resume @user/thread_id` - Resume conversation under a new thread\n");
+    lang.put("HELP_RESUME", ">`resume @user/thread_id` - Resume conversation under a new thread\n");
     lang.put("HELP_SHUTDOWN", ">`shutdown` - Disconnect bot\n");
     lang.put(
         "IN_CONV_CHANNEL",
         ">_*Users in `#%s` can not start conversations. Send `!help` for a list of available commands.*_");
     lang.put("LIST_COMMANDS", "*Commands:*\n");
     lang.put("LIST_NONE", ">_(None)_\n");
-    lang.put("LIST_THREADS", "*<@%s>'s threads _(page %d):_*\n");
+    lang.put("LIST_THREADS_USER", "*<@%s>'s recently expired threads _(page %d):_*\n");
+    lang.put("LIST_THREADS", "*Recently expired threads _(page %d):_*\n");
+    lang.put("LIST_THREADS_ELE", ">%s (*<@%s>*) _%s_\n");
+    lang.put("LIST_THREADS_ELE_USER", ">%s _%s_\n");
     lang.put("LOG", "%s %s: %s\n");
     lang.put("LOG_EDITED", "%s %s: %s (edited)\n");
     lang.put("LOG_TIMESTAMP_FMT", "[yyyy-MM-dd hh:mm:ss a]");

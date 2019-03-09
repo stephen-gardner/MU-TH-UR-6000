@@ -72,17 +72,26 @@ public class Database {
     return logs;
   }
 
-  public ArrayList<String> lookupThreads(String userID, int page) throws SQLException {
-    ArrayList<String> threads = new ArrayList<>();
-    PreparedStatement ps = conn.prepareStatement(SQL.LOOKUP_THREADS.toString());
+  public ArrayList<ThreadInfo> lookupThreads(String userID, int page) throws SQLException {
+    ArrayList<ThreadInfo> threads = new ArrayList<>();
+    SQL sql = (userID != null) ? SQL.LOOKUP_THREADS_USER : SQL.LOOKUP_THREADS;
+    PreparedStatement ps = conn.prepareStatement(sql.toString());
+    int idx = 1;
 
-    ps.setString(1, userID);
-    ps.setInt(2, Main.getConfig().getThreadsPerPage());
-    ps.setInt(3, (Main.getConfig().getThreadsPerPage() * (page - 1)));
+    if (userID != null) ps.setString(idx++, userID);
+
+    ps.setInt(idx++, Main.getConfig().getThreadsPerPage());
+    ps.setInt(idx, (Main.getConfig().getThreadsPerPage() * (page - 1)));
 
     ResultSet rs = ps.executeQuery();
 
-    while (rs.next()) threads.add(rs.getString("thread_id"));
+    while (rs.next()) {
+      String threadID = rs.getString("thread_id");
+      userID = rs.getString("user_id");
+      String timestamp = rs.getString("timestamp");
+
+      threads.add(new ThreadInfo(threadID, userID, timestamp));
+    }
 
     rs.close();
     ps.close();

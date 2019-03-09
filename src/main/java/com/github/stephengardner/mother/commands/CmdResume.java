@@ -3,6 +3,7 @@ package com.github.stephengardner.mother.commands;
 import com.github.stephengardner.mother.Conversation;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
+import com.github.stephengardner.mother.data.ThreadInfo;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
@@ -38,11 +39,11 @@ public class CmdResume implements CommandExecutor {
 
         if (dstUser == null || mom.findConversationByUserID(dstUserID) != null) return false;
 
-        ArrayList<String> threads = mom.getDatabase().lookupThreads(dstUserID, 1);
+        ArrayList<ThreadInfo> threads = mom.getDatabase().lookupThreads(dstUserID, 1);
 
         if (threads.isEmpty()) return false;
 
-        conv = mom.getDatabase().loadConversation(threads.get(0));
+        conv = mom.getDatabase().loadConversation(threads.get(0).getThreadID());
       }
     } catch (SQLException e) {
       e.printStackTrace();

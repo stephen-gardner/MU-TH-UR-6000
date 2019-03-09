@@ -3,6 +3,7 @@ package com.github.stephengardner.mother.commands;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
 import com.github.stephengardner.mother.data.Msg;
+import com.github.stephengardner.mother.data.ThreadInfo;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
@@ -20,20 +21,16 @@ public class CmdHistory implements CommandExecutor {
   @Override
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
-    ArrayList<String> threads;
+    ArrayList<ThreadInfo> threads;
 
-    if (args.length < 1 || args.length > 2) return false;
+    if (args.length > 2) return false;
 
-    String dstUserID = Util.getTaggedUserID(args[0]);
-    SlackUser dstUser = mom.getSession().findUserById(dstUserID);
-
-    if (dstUser == null) return false;
-
+    String dstUserID = (args.length > 0) ? Util.getTaggedUserID(args[0]) : null;
     int page = 1;
 
-    if (args.length == 2) {
+    if ((args.length > 0 && dstUserID == null) || args.length > 1) {
       try {
-        page = Integer.parseInt(args[1]);
+        page = Integer.parseInt((dstUserID == null) ? args[0] : args[1]);
       } catch (NumberFormatException e) {
         return false;
       }
@@ -52,21 +49,30 @@ public class CmdHistory implements CommandExecutor {
     return true;
   }
 
-  private String buildOutputList(String userID, ArrayList<String> threads, int page) {
+  private String buildOutputList(String userID, ArrayList<ThreadInfo> threads, int page) {
     StringBuilder sb = new StringBuilder();
-    boolean empty = true;
 
-    sb.append(String.format(Msg.LIST_THREADS.toString(), userID, page));
+    if (userID != null) sb.append(String.format(Msg.LIST_THREADS_USER.toString(), userID, page));
+    else sb.append(String.format(Msg.LIST_THREADS.toString(), page));
 
-    for (String threadID : threads) {
-      if (empty) empty = false;
+    for (ThreadInfo thread : threads) {
+      String threadLink =
+          Util.getThreadLink(mom.getSession(), mom.getConvChannelID(), thread.getThreadID());
 
-      sb.append(">")
-          .append(Util.getThreadLink(mom.getSession(), mom.getConvChannelID(), threadID))
-          .append("\n");
+      if (userID != null) {
+        sb.append(
+            String.format(Msg.LIST_THREADS_ELE_USER.toString(), threadLink, thread.getTimestamp()));
+      } else {
+        sb.append(
+            String.format(
+                Msg.LIST_THREADS_ELE.toString(),
+                threadLink,
+                thread.getUserID(),
+                thread.getTimestamp()));
+      }
     }
 
-    if (empty) sb.append(Msg.LIST_NONE.toString());
+    if (threads.isEmpty()) sb.append(Msg.LIST_NONE.toString());
 
     return sb.toString();
   }
