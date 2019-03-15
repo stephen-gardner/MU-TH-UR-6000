@@ -104,6 +104,8 @@ public class Main {
     FileReader reader = new FileReader(configFile);
     MotherConfig[] loaded = gson.fromJson(new JsonParser().parse(reader), MotherConfig[].class);
 
+    if (loaded == null) return false;
+
     for (MotherConfig mc : loaded) {
       if (!mc.isValid()) {
         reader.close();
@@ -114,7 +116,7 @@ public class Main {
     }
 
     reader.close();
-    return (!bots.isEmpty());
+    return true;
   }
 
   private static Mother getMotherInstance(MotherConfig mc) {

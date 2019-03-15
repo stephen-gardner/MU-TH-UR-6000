@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Mother {
@@ -26,6 +27,7 @@ public class Mother {
   private ArrayList<String> joinedChannels;
   private HashMap<String, CommandExecutor> commands;
   private ConcurrentHashMap<String, Conversation> convos;
+  private ConcurrentLinkedQueue<Conversation> expiredConvos;
   private AtomicBoolean online;
   private long lastUpdate;
 
@@ -33,7 +35,8 @@ public class Mother {
     joinedChannels = new ArrayList<>();
     commands = new HashMap<>();
     convos = new ConcurrentHashMap<>();
-    online = new AtomicBoolean(true);
+    expiredConvos = new ConcurrentLinkedQueue<>();
+    online = new AtomicBoolean(false);
     lastUpdate = 0;
   }
 
@@ -53,6 +56,7 @@ public class Mother {
       db = new Database(this, mc.getDbPath());
       session = SlackSessionFactory.createWebSocketSlackSession(mc.getAuthToken());
       session.connect();
+      online.compareAndSet(false, true);
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
@@ -122,18 +126,34 @@ public class Mother {
     return convos.values();
   }
 
-  public void reapConversations(final long sessionTimeout) throws SQLException {
-    Iterator<String> it = convos.keySet().iterator();
+  public void expireConversation(Conversation conv) {
+    convos.remove(conv.getDirectChannelID());
+    expiredConvos.add(conv);
+    conv.sendToUser(Msg.SESSION_EXPIRED_DIRECT.get(this));
+    conv.sendToThread(String.format(Msg.SESSION_EXPIRED_CONV.get(this), conv.getThreadTimestamp()));
+  }
 
-    while (it.hasNext()) {
-      Conversation conv = convos.get(it.next());
+  public void reapConversations(final long sessionTimeout) throws SQLException {
+    Iterator<String> active = convos.keySet().iterator();
+    Conversation conv;
+
+    while (active.hasNext()) {
+      conv = convos.get(active.next());
 
       if (System.currentTimeMillis() - conv.getLastUpdate() < sessionTimeout) continue;
 
-      it.remove();
+      active.remove();
       conv.sendToUser(Msg.SESSION_EXPIRED_DIRECT.get(this));
       conv.sendToThread(
           String.format(Msg.SESSION_EXPIRED_CONV.get(this), conv.getThreadTimestamp()));
+      db.saveMessages(conv);
+    }
+
+    Iterator<Conversation> expired = expiredConvos.iterator();
+
+    while (expired.hasNext()) {
+      conv = expired.next();
+      expired.remove();
       db.saveMessages(conv);
     }
   }

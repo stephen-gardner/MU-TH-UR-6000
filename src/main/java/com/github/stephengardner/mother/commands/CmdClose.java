@@ -34,7 +34,7 @@ public class CmdClose implements CommandExecutor {
 
     if (conv == null) return false;
 
-    conv.expire();
+    mom.expireConversation(conv);
     return true;
   }
 }

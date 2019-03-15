@@ -149,10 +149,6 @@ public class Conversation {
     addLog(directTimestamp, convTimestamp, new LogEntry(userID, content, convTimestamp, false));
   }
 
-  public void expire() {
-    lastUpdate = System.currentTimeMillis() - mom.getConfig().getSessionTimeout();
-  }
-
   private void update() {
     lastUpdate = System.currentTimeMillis();
   }
