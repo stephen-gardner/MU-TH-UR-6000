@@ -1,13 +1,10 @@
 package com.github.stephengardner.mother.commands;
 
 import com.github.stephengardner.mother.Conversation;
-import com.github.stephengardner.mother.Main;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
-
-import java.sql.SQLException;
 
 public class CmdClose implements CommandExecutor {
 
@@ -38,14 +35,6 @@ public class CmdClose implements CommandExecutor {
     if (conv == null) return false;
 
     conv.expire();
-
-    try {
-      mom.reapConversations(Main.getConfig().getSessionTimeout());
-    } catch (SQLException e) {
-      e.printStackTrace();
-      return false;
-    }
-
     return true;
   }
 }

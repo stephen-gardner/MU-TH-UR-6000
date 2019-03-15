@@ -1,7 +1,6 @@
 package com.github.stephengardner.mother;
 
 import com.github.stephengardner.mother.data.Msg;
-import com.ullink.slack.simpleslackapi.SlackSession;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,10 +16,10 @@ public class Util {
     return null;
   }
 
-  public static String getThreadLink(SlackSession s, String chanID, String timestamp) {
+  public static String getThreadLink(Mother mom, String chanID, String timestamp) {
     return String.format(
-        Msg.MESSAGE_LINK.toString(),
-        s.getTeam().getDomain(),
+        Msg.MESSAGE_LINK.get(mom),
+        mom.getSession().getTeam().getDomain(),
         chanID,
         timestamp.replace(".", ""),
         timestamp);

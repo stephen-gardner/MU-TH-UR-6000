@@ -14,20 +14,16 @@ public class CmdHelp implements CommandExecutor {
   private Mother mom;
   private HashMap<String, String> help;
 
-  private CmdHelp() {
-    help = new HashMap<>();
-    help.put("active", Msg.HELP_ACTIVE.toString());
-    help.put("close", Msg.HELP_CLOSE.toString());
-    help.put("contact", Msg.HELP_CONTACT.toString());
-    help.put("history", Msg.HELP_HISTORY.toString());
-    help.put("logs", Msg.HELP_LOGS.toString());
-    help.put("resume", Msg.HELP_RESUME.toString());
-    help.put("shutdown", Msg.HELP_SHUTDOWN.toString());
-  }
-
   public CmdHelp(Mother mom) {
-    this();
     this.mom = mom;
+    help = new HashMap<>();
+    help.put("active", Msg.HELP_ACTIVE.get(mom));
+    help.put("close", Msg.HELP_CLOSE.get(mom));
+    help.put("contact", Msg.HELP_CONTACT.get(mom));
+    help.put("history", Msg.HELP_HISTORY.get(mom));
+    help.put("logs", Msg.HELP_LOGS.get(mom));
+    help.put("resume", Msg.HELP_RESUME.get(mom));
+    help.put("shutdown", Msg.HELP_SHUTDOWN.get(mom));
   }
 
   @Override
@@ -50,7 +46,7 @@ public class CmdHelp implements CommandExecutor {
     if (!user.isAdmin()) commands.remove("shutdown");
 
     Collections.sort(commands);
-    sb.append(Msg.LIST_COMMANDS.toString());
+    sb.append(Msg.LIST_COMMANDS.get(mom));
 
     for (String cmd : commands) {
       if (help.containsKey(cmd)) sb.append(help.get(cmd));

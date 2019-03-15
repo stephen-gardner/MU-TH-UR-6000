@@ -141,7 +141,7 @@ public class Conversation {
       chan = getDirectChannel();
     }
 
-    String tagged = String.format(Msg.MESSAGE_COPY_FMT.toString(), userID, content);
+    String tagged = String.format(Msg.MESSAGE_COPY_FMT.get(mom), userID, content);
 
     if (mom.getSession().updateMessage(timestamp, chan, tagged).getReply().getTimestamp() == null)
       return;
@@ -150,7 +150,7 @@ public class Conversation {
   }
 
   public void expire() {
-    lastUpdate = System.currentTimeMillis() - Main.getConfig().getSessionTimeout();
+    lastUpdate = System.currentTimeMillis() - mom.getConfig().getSessionTimeout();
   }
 
   private void update() {

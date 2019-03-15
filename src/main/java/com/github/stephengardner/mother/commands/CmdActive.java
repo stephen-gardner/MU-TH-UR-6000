@@ -25,16 +25,16 @@ public class CmdActive implements CommandExecutor {
     Collection<Conversation> convos = mom.getAllConversations();
     StringBuilder sb = new StringBuilder();
 
-    sb.append(Msg.ACTIVE_CONVS.toString());
+    sb.append(Msg.ACTIVE_CONVS.get(mom));
 
     for (Conversation conv : convos) {
       String link =
-          Util.getThreadLink(mom.getSession(), mom.getConvChannelID(), conv.getThreadTimestamp());
+          Util.getThreadLink(mom, mom.getConfig().getConvChannelID(), conv.getThreadTimestamp());
 
-      sb.append(String.format(Msg.ACTIVE_INFO.toString(), link, conv.getUserID()));
+      sb.append(String.format(Msg.ACTIVE_INFO.get(mom), link, conv.getUserID()));
     }
 
-    if (convos.isEmpty()) sb.append(Msg.LIST_NONE.toString());
+    if (convos.isEmpty()) sb.append(Msg.LIST_NONE.get(mom));
 
     mom.sendToChannel(chan, sb.toString(), threadTimestamp);
     return true;

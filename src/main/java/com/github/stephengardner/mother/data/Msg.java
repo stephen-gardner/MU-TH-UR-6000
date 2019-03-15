@@ -1,11 +1,10 @@
 package com.github.stephengardner.mother.data;
 
-import com.github.stephengardner.mother.Main;
+import com.github.stephengardner.mother.Mother;
 
 public enum Msg {
   ACTIVE_CONVS,
   ACTIVE_INFO,
-  CONFIG_ERROR,
   HELP_ACTIVE,
   HELP_CLOSE,
   HELP_CONTACT,
@@ -39,8 +38,7 @@ public enum Msg {
   SESSION_RESUME_DIRECT,
   SESSION_START;
 
-  @Override
-  public String toString() {
-    return Main.getConfig().getMsg(this.name());
+  public String get(Mother mom) {
+    return mom.getConfig().getMsg(this.name());
   }
 }

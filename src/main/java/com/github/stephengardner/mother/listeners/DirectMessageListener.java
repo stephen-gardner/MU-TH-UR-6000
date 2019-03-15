@@ -31,7 +31,7 @@ public class DirectMessageListener implements SlackMessagePostedListener {
 
     if (!chan.isDirect()) {
       if (!mom.hasJoinedChannel(chan.getId())) {
-        mom.sendToChannel(chan, Msg.NO_GROUPS.toString());
+        mom.sendToChannel(chan, Msg.NO_GROUPS.get(mom));
         mom.addJoinedChannel(chan.getId());
       }
 
@@ -39,26 +39,34 @@ public class DirectMessageListener implements SlackMessagePostedListener {
     }
 
     if (mom.inConvChannel(user.getId())) {
-      if (ev.getMessageContent().startsWith("!")) {
-        mom.runCommands(ev, ev.getThreadTimestamp());
-      } else {
-        mom.sendToChannel(
-            chan,
-            String.format(Msg.IN_CONV_CHANNEL.toString(), mom.getConvChannel().getName()),
-            ev.getThreadTimestamp());
-      }
-
+      officialBusiness(ev);
       return;
     }
 
+    converse(ev, user, chan);
+  }
+
+  private void converse(SlackMessagePosted ev, SlackUser user, SlackChannel chan) {
     if (!mom.hasConversation(chan.getId())) mom.startConversation(user, chan.getId(), true);
 
     Conversation conv = mom.getConversation(chan.getId());
     String content =
-        String.format(Msg.MESSAGE_COPY_FMT.toString(), user.getId(), ev.getMessageContent());
+        String.format(Msg.MESSAGE_COPY_FMT.get(mom), user.getId(), ev.getMessageContent());
     String convTimestamp = conv.sendToThread(content).getTimestamp();
     LogEntry log = new LogEntry(user.getId(), ev.getMessageContent(), convTimestamp, true);
 
     conv.addLog(ev.getTimestamp(), convTimestamp, log);
+  }
+
+  private void officialBusiness(SlackMessagePosted ev) {
+    if (ev.getMessageContent().startsWith("!")) {
+      mom.runCommands(ev, ev.getThreadTimestamp());
+      return;
+    }
+
+    mom.sendToChannel(
+        ev.getChannel(),
+        String.format(Msg.IN_CONV_CHANNEL.get(mom), mom.getConvChannel().getName()),
+        ev.getThreadTimestamp());
   }
 }

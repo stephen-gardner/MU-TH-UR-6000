@@ -25,7 +25,7 @@ public class ChanMessageListener implements SlackMessagePostedListener {
     String userID = ev.getUser().getId();
     String threadTimestamp = ev.getThreadTimestamp();
 
-    if (!ev.getChannel().getId().equals(mom.getConvChannelID())
+    if (!ev.getChannel().getId().equals(mom.getConfig().getConvChannelID())
         || s.sessionPersona().getId().equals(userID)
         || userID.equals("USLACKBOT")) return;
 
@@ -40,7 +40,7 @@ public class ChanMessageListener implements SlackMessagePostedListener {
 
     if (conv == null) return false;
 
-    String content = String.format(Msg.MESSAGE_COPY_FMT.toString(), userID, ev.getMessageContent());
+    String content = String.format(Msg.MESSAGE_COPY_FMT.get(mom), userID, ev.getMessageContent());
     String directTimestamp = conv.sendToUser(content).getTimestamp();
     LogEntry log = new LogEntry(userID, ev.getMessageContent(), ev.getTimestamp(), true);
 

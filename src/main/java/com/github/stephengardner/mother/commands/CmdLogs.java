@@ -69,9 +69,9 @@ public class CmdLogs implements CommandExecutor {
 
   private void buildLogFile(File logFile, ArrayList<LogEntry> logs) throws IOException {
     FileWriter fw = new FileWriter(logFile);
-    DateFormat df = new SimpleDateFormat(Msg.LOG_TIMESTAMP_FMT.toString());
+    DateFormat df = new SimpleDateFormat(Msg.LOG_TIMESTAMP_FMT.get(mom));
 
-    df.setTimeZone(TimeZone.getTimeZone(Msg.LOG_TIMESTAMP_ZONE.toString()));
+    df.setTimeZone(TimeZone.getTimeZone(Msg.LOG_TIMESTAMP_ZONE.get(mom)));
 
     for (LogEntry log : logs) {
       Msg fmt = (log.isOriginal()) ? Msg.LOG : Msg.LOG_EDITED;
@@ -79,7 +79,7 @@ public class CmdLogs implements CommandExecutor {
       long epoch = Long.parseLong(log.getTimestamp().split("\\.")[0]);
       Date date = Date.from(Instant.ofEpochSecond(epoch));
 
-      fw.write(String.format(fmt.toString(), df.format(date), name, log.getMessage()));
+      fw.write(String.format(fmt.get(mom), df.format(date), name, log.getMessage()));
     }
 
     fw.close();

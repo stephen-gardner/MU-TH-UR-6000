@@ -1,27 +1,124 @@
 package com.github.stephengardner.mother;
 
 import com.github.stephengardner.mother.data.MotherConfig;
-import com.github.stephengardner.mother.data.Msg;
 import com.github.stephengardner.mother.listeners.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
-import com.ullink.slack.simpleslackapi.SlackChannel;
-import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class Main {
 
-  private static MotherConfig mc;
+  private static HashMap<Mother, MotherConfig> bots;
 
   public static void main(String[] args) {
-    loadConfig();
+    bots = new HashMap<>();
 
-    final Mother mom = new Mother(mc.getAuthToken(), mc.getConvChannelID(), mc.getDbPath());
+    try {
+      File configFile = new File("config.json");
+
+      if (!configFile.exists()) {
+        makeConfig(configFile);
+        System.out.println(String.format("%s generated", configFile.getName()));
+        System.exit(0);
+      }
+
+      if (!loadConfig(configFile)) {
+        System.err.println(String.format("Error: %s is missing or invalid", configFile.getPath()));
+        System.exit(1);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+
+    boolean run = true;
+
+    while (run) {
+      try {
+        Long sleepTime = scrubBots();
+
+        if (sleepTime != null) Thread.sleep(sleepTime);
+        else run = false;
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private static Long scrubBots() {
+    Iterator<Mother> it = bots.keySet().iterator();
+    Long sleepTime = null;
+    long currentTime = System.currentTimeMillis();
+
+    while (it.hasNext()) {
+      Mother mom = it.next();
+      MotherConfig mc = mom.getConfig();
+
+      if (!mom.isOnline()) {
+        it.remove();
+
+        try {
+          mom.reapConversations(0L);
+          mom.getDatabase().close();
+        } catch (SQLException e) {
+          e.printStackTrace();
+        }
+
+        continue;
+      }
+
+      long timeElapsed = currentTime - mom.getLastUpdate();
+      long nextUpdate = mc.getTimeoutCheckInterval() - timeElapsed;
+
+      if (timeElapsed >= mc.getTimeoutCheckInterval()) {
+        mom.update();
+
+        if (sleepTime == null) sleepTime = mc.getTimeoutCheckInterval();
+      } else if (sleepTime == null || nextUpdate < sleepTime) sleepTime = nextUpdate;
+    }
+
+    return sleepTime;
+  }
+
+  private static void makeConfig(File configFile) throws IOException {
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    FileWriter writer = new FileWriter(configFile);
+    MotherConfig mc = new MotherConfig();
+
+    mc.initDefaults();
+    bots.put(getMotherInstance(mc), mc);
+    writer.write(gson.toJson(bots.values().toArray(new MotherConfig[1])));
+    writer.close();
+  }
+
+  private static boolean loadConfig(File configFile) throws IOException {
+    Gson gson = new Gson();
+    FileReader reader = new FileReader(configFile);
+    MotherConfig[] loaded = gson.fromJson(new JsonParser().parse(reader), MotherConfig[].class);
+
+    for (MotherConfig mc : loaded) {
+      if (!mc.isValid()) {
+        reader.close();
+        return false;
+      }
+
+      bots.put(getMotherInstance(mc), mc);
+    }
+
+    reader.close();
+    return (!bots.isEmpty());
+  }
+
+  private static Mother getMotherInstance(MotherConfig mc) {
+    Mother mom = new Mother(mc);
 
     new DirectMessageListener(mom).registerEvent();
     new ChanMessageListener(mom).registerEvent();
@@ -30,54 +127,6 @@ public class Main {
     new EmojiAddedListener(mom).registerEvent();
     new EmojiRemovedListener(mom).registerEvent();
     new JoinedChannelListener(mom).registerEvent();
-
-    SlackUser user = mom.getSession().findUserById("USLACKBOT");
-    SlackChannel chan =
-        mom.getSession().openDirectMessageChannel(user).getReply().getSlackChannel();
-
-    while (mom.isOnline()) {
-      try {
-        mom.getSession().sendTyping(chan); // Fool Slack into thinking bot is always active
-        mom.reapConversations(mc.getSessionTimeout());
-        Thread.sleep(mc.getTimeoutCheckInterval());
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  public static MotherConfig getConfig() {
-    return mc;
-  }
-
-  private static void loadConfig() {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    File config = new File("config.json");
-
-    try {
-      if (!config.exists()) {
-        FileWriter writer = new FileWriter(config);
-
-        mc = new MotherConfig();
-        mc.initDefaults();
-        writer.write(gson.toJson(mc));
-        writer.close();
-        System.out.println(String.format("%s generated", config.getName()));
-        System.exit(0);
-      }
-
-      FileReader reader = new FileReader(config);
-
-      mc = new Gson().fromJson(new JsonParser().parse(reader), MotherConfig.class);
-      reader.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(1);
-    }
-
-    if (mc == null) {
-      System.err.println(String.format(Msg.CONFIG_ERROR.toString(), config));
-      System.exit(1);
-    }
+    return mom;
   }
 }

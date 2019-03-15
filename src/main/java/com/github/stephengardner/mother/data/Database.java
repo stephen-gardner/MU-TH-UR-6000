@@ -1,7 +1,6 @@
 package com.github.stephengardner.mother.data;
 
 import com.github.stephengardner.mother.Conversation;
-import com.github.stephengardner.mother.Main;
 import com.github.stephengardner.mother.Mother;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
@@ -20,7 +19,7 @@ public class Database {
   }
 
   public Conversation loadConversation(String threadTimestamp) throws SQLException {
-    PreparedStatement ps = conn.prepareStatement(SQL.FIND_THREAD_INDEX.toString());
+    PreparedStatement ps = conn.prepareStatement(SQL.FIND_THREAD_INDEX.get(getIndexTable()));
     Conversation conv = null;
 
     ps.setString(1, threadTimestamp);
@@ -39,8 +38,8 @@ public class Database {
       conv = new Conversation(mom, user.getId(), mom.getUserChannel(user).getId(), threadTimestamp);
 
       if (mom.addConversation(conv.getDirectChannelID(), conv) == null) {
-        conv.sendToThread(Msg.SESSION_RESUME_CONV.toString());
-        conv.sendToUser(Msg.SESSION_RESUME_DIRECT.toString());
+        conv.sendToThread(Msg.SESSION_RESUME_CONV.get(mom));
+        conv.sendToUser(Msg.SESSION_RESUME_DIRECT.get(mom));
       }
     }
 
@@ -51,10 +50,15 @@ public class Database {
 
   public ArrayList<LogEntry> lookupLogs(String id, boolean isUser) throws SQLException {
     ArrayList<LogEntry> logs = new ArrayList<>();
-    SQL sql = (isUser) ? SQL.LOOKUP_LOGS_USER : SQL.LOOKUP_LOGS_THREAD;
-    PreparedStatement ps = conn.prepareStatement(sql.toString());
+    PreparedStatement ps;
 
-    ps.setString(1, id);
+    if (isUser) {
+      ps = conn.prepareStatement(SQL.LOOKUP_LOGS_USER.get(getMessagesTable(), getIndexTable()));
+      ps.setString(1, id);
+    } else {
+      ps = conn.prepareStatement(SQL.LOOKUP_LOGS_THREAD.get(getMessagesTable()));
+      ps.setString(1, id);
+    }
 
     ResultSet rs = ps.executeQuery();
 
@@ -74,14 +78,18 @@ public class Database {
 
   public ArrayList<ThreadInfo> lookupThreads(String userID, int page) throws SQLException {
     ArrayList<ThreadInfo> threads = new ArrayList<>();
-    SQL sql = (userID != null) ? SQL.LOOKUP_THREADS_USER : SQL.LOOKUP_THREADS;
-    PreparedStatement ps = conn.prepareStatement(sql.toString());
-    int idx = 1;
+    PreparedStatement ps;
 
-    if (userID != null) ps.setString(idx++, userID);
-
-    ps.setInt(idx++, Main.getConfig().getThreadsPerPage());
-    ps.setInt(idx, (Main.getConfig().getThreadsPerPage() * (page - 1)));
+    if (userID != null) {
+      ps = conn.prepareStatement(SQL.LOOKUP_THREADS_USER.get(getIndexTable()));
+      ps.setString(1, userID);
+      ps.setInt(2, mom.getConfig().getThreadsPerPage());
+      ps.setInt(3, mom.getConfig().getThreadsPerPage() * (page - 1));
+    } else {
+      ps = conn.prepareStatement(SQL.LOOKUP_THREADS.get(getIndexTable()));
+      ps.setInt(1, mom.getConfig().getThreadsPerPage());
+      ps.setInt(2, mom.getConfig().getThreadsPerPage() * (page - 1));
+    }
 
     ResultSet rs = ps.executeQuery();
 
@@ -101,11 +109,11 @@ public class Database {
   public void saveMessages(Conversation conv) throws SQLException {
     PreparedStatement ps;
 
-    ps = conn.prepareStatement(SQL.INSERT_THREAD_INDEX.toString());
+    ps = conn.prepareStatement(SQL.INSERT_THREAD_INDEX.get(getIndexTable()));
     ps.setString(1, conv.getThreadTimestamp());
     ps.setString(2, conv.getUserID());
     ps.executeUpdate();
-    ps = conn.prepareStatement(SQL.INSERT_MESSAGE.toString());
+    ps = conn.prepareStatement(SQL.INSERT_MESSAGE.get(getMessagesTable()));
 
     for (LogEntry log : conv.getLogs()) {
       ps.setString(1, log.getUserID());
@@ -124,13 +132,21 @@ public class Database {
     Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
     Statement stmt = conn.createStatement();
 
-    stmt.execute(SQL.CREATE_MESSAGES_TABLE.toString());
-    stmt.execute(SQL.CREATE_THREAD_INDEX_TABLE.toString());
+    stmt.executeUpdate(SQL.CREATE_MESSAGES_TABLE.get(getMessagesTable()));
+    stmt.executeUpdate(SQL.CREATE_THREAD_INDEX_TABLE.get(getIndexTable()));
     stmt.close();
     return conn;
   }
 
   public void close() throws SQLException {
     conn.close();
+  }
+
+  private String getIndexTable() {
+    return mom.getConfig().getConvChannelID() + "_index";
+  }
+
+  private String getMessagesTable() {
+    return mom.getConfig().getConvChannelID() + "_messages";
   }
 }

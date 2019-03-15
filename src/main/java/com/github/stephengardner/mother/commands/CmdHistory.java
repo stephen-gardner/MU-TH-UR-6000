@@ -52,27 +52,27 @@ public class CmdHistory implements CommandExecutor {
   private String buildOutputList(String userID, ArrayList<ThreadInfo> threads, int page) {
     StringBuilder sb = new StringBuilder();
 
-    if (userID != null) sb.append(String.format(Msg.LIST_THREADS_USER.toString(), userID, page));
-    else sb.append(String.format(Msg.LIST_THREADS.toString(), page));
+    if (userID != null) sb.append(String.format(Msg.LIST_THREADS_USER.get(mom), userID, page));
+    else sb.append(String.format(Msg.LIST_THREADS.get(mom), page));
 
     for (ThreadInfo thread : threads) {
       String threadLink =
-          Util.getThreadLink(mom.getSession(), mom.getConvChannelID(), thread.getThreadID());
+          Util.getThreadLink(mom, mom.getConfig().getConvChannelID(), thread.getThreadID());
 
       if (userID != null) {
         sb.append(
-            String.format(Msg.LIST_THREADS_ELE_USER.toString(), threadLink, thread.getTimestamp()));
+            String.format(Msg.LIST_THREADS_ELE_USER.get(mom), threadLink, thread.getTimestamp()));
       } else {
         sb.append(
             String.format(
-                Msg.LIST_THREADS_ELE.toString(),
+                Msg.LIST_THREADS_ELE.get(mom),
                 threadLink,
                 thread.getUserID(),
                 thread.getTimestamp()));
       }
     }
 
-    if (threads.isEmpty()) sb.append(Msg.LIST_NONE.toString());
+    if (threads.isEmpty()) sb.append(Msg.LIST_NONE.get(mom));
 
     return sb.toString();
   }
