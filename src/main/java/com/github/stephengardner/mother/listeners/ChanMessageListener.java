@@ -40,7 +40,7 @@ public class ChanMessageListener implements SlackMessagePostedListener {
 
     if (conv == null) return false;
 
-    String content = String.format(Msg.MESSAGE_COPY_FMT.get(mom), userID, ev.getMessageContent());
+    String content = Msg.MESSAGE_COPY_FMT.get(mom, userID, ev.getMessageContent());
     String directTimestamp = conv.sendToUser(content).getTimestamp();
     LogEntry log = new LogEntry(userID, ev.getMessageContent(), ev.getTimestamp(), true);
 

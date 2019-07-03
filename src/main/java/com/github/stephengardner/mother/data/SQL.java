@@ -42,7 +42,9 @@ public enum SQL {
     this.sql = sql;
   }
 
-  public String get(String... args) {
+  public String get(Object... args) {
+    if (args == null) return sql;
+
     return String.format(sql, args);
   }
 }

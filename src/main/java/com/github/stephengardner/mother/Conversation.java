@@ -7,6 +7,7 @@ import com.ullink.slack.simpleslackapi.SlackUser;
 import com.ullink.slack.simpleslackapi.replies.SlackMessageReply;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class Conversation {
@@ -37,20 +38,6 @@ public class Conversation {
     update();
   }
 
-  public boolean hasLog(String timestamp) {
-    return timestamp.equals(threadTimestamp)
-        || directIndex.containsKey(timestamp)
-        || convIndex.containsKey(timestamp);
-  }
-
-  public ArrayList<LogEntry> getLogs() {
-    ArrayList<LogEntry> allLogs = new ArrayList<>();
-
-    allLogs.addAll(logs.values());
-    allLogs.addAll(editedLogs);
-    return allLogs;
-  }
-
   public void addLog(String directTimestamp, String convTimestamp, LogEntry log) {
     LogEntry prev = logs.put(directTimestamp, log);
 
@@ -61,36 +48,18 @@ public class Conversation {
     update();
   }
 
-  public SlackUser getUser() {
-    return mom.getSession().findUserById(userID);
+  public boolean hasLog(String timestamp) {
+    return timestamp.equals(threadTimestamp)
+        || directIndex.containsKey(timestamp)
+        || convIndex.containsKey(timestamp);
   }
 
-  public String getUserID() {
-    return userID;
-  }
+  public Collection<LogEntry> getLogs() {
+    ArrayList<LogEntry> allLogs = new ArrayList<>();
 
-  public SlackChannel getDirectChannel() {
-    return mom.getSession().findChannelById(directChanID);
-  }
-
-  public String getDirectChannelID() {
-    return directChanID;
-  }
-
-  public String getThreadTimestamp() {
-    return threadTimestamp;
-  }
-
-  public long getLastUpdate() {
-    return lastUpdate;
-  }
-
-  public SlackMessageReply sendToThread(String msg) {
-    return mom.sendToConvChannel(msg, threadTimestamp);
-  }
-
-  public SlackMessageReply sendToUser(String msg) {
-    return mom.getSession().sendMessage(getDirectChannel(), msg).getReply();
+    allLogs.addAll(logs.values());
+    allLogs.addAll(editedLogs);
+    return allLogs;
   }
 
   public void setReaction(String timestamp, String emojiCode, boolean isDirect, boolean removed) {
@@ -141,15 +110,43 @@ public class Conversation {
       chan = getDirectChannel();
     }
 
-    String tagged = String.format(Msg.MESSAGE_COPY_FMT.get(mom), userID, content);
-
-    if (mom.getSession().updateMessage(timestamp, chan, tagged).getReply().getTimestamp() == null)
-      return;
-
+    mom.getSession().updateMessage(timestamp, chan, Msg.MESSAGE_COPY_FMT.get(mom, userID, content));
     addLog(directTimestamp, convTimestamp, new LogEntry(userID, content, convTimestamp, false));
   }
 
-  private void update() {
+  public SlackMessageReply sendToThread(String msg) {
+    return mom.sendToConvThread(msg, threadTimestamp);
+  }
+
+  public SlackMessageReply sendToUser(String msg) {
+    return mom.sendToChannel(getDirectChannel(), msg);
+  }
+
+  public void update() {
     lastUpdate = System.currentTimeMillis();
+  }
+
+  public long getLastUpdate() {
+    return lastUpdate;
+  }
+
+  public SlackUser getUser() {
+    return mom.getSession().findUserById(userID);
+  }
+
+  public String getUserID() {
+    return userID;
+  }
+
+  public SlackChannel getDirectChannel() {
+    return mom.getSession().findChannelById(directChanID);
+  }
+
+  public String getDirectChannelID() {
+    return directChanID;
+  }
+
+  public String getThreadTimestamp() {
+    return threadTimestamp;
   }
 }

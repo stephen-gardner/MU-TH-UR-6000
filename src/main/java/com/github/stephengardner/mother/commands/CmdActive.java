@@ -31,12 +31,12 @@ public class CmdActive implements CommandExecutor {
       String link =
           Util.getThreadLink(mom, mom.getConfig().getConvChannelID(), conv.getThreadTimestamp());
 
-      sb.append(String.format(Msg.ACTIVE_INFO.get(mom), link, conv.getUserID()));
+      sb.append(Msg.ACTIVE_INFO.get(mom, link, conv.getUserID()));
     }
 
     if (convos.isEmpty()) sb.append(Msg.LIST_NONE.get(mom));
 
-    mom.sendToChannel(chan, sb.toString(), threadTimestamp);
+    mom.sendToThread(chan, sb.toString(), threadTimestamp);
     return true;
   }
 }

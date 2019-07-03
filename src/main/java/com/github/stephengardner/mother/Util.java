@@ -17,11 +17,9 @@ public class Util {
   }
 
   public static String getThreadLink(Mother mom, String chanID, String timestamp) {
-    return String.format(
-        Msg.MESSAGE_LINK.get(mom),
-        mom.getSession().getTeam().getDomain(),
-        chanID,
-        timestamp.replace(".", ""),
-        timestamp);
+    String domain = mom.getSession().getTeam().getDomain();
+    String parsed = timestamp.replace(".", "");
+
+    return Msg.MESSAGE_LINK.get(mom, domain, chanID, parsed, timestamp);
   }
 }

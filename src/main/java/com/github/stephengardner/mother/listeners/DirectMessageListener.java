@@ -50,8 +50,7 @@ public class DirectMessageListener implements SlackMessagePostedListener {
     if (!mom.hasConversation(chan.getId())) mom.startConversation(user, chan.getId(), true);
 
     Conversation conv = mom.getConversation(chan.getId());
-    String content =
-        String.format(Msg.MESSAGE_COPY_FMT.get(mom), user.getId(), ev.getMessageContent());
+    String content = Msg.MESSAGE_COPY_FMT.get(mom, user.getId(), ev.getMessageContent());
     String convTimestamp = conv.sendToThread(content).getTimestamp();
     LogEntry log = new LogEntry(user.getId(), ev.getMessageContent(), convTimestamp, true);
 
@@ -64,9 +63,9 @@ public class DirectMessageListener implements SlackMessagePostedListener {
       return;
     }
 
-    mom.sendToChannel(
+    mom.sendToThread(
         ev.getChannel(),
-        String.format(Msg.IN_CONV_CHANNEL.get(mom), mom.getConvChannel().getName()),
+        Msg.IN_CONV_CHANNEL.get(mom, mom.getConvChannel().getName()),
         ev.getThreadTimestamp());
   }
 }

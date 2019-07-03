@@ -20,7 +20,6 @@ public class Database {
 
   public Conversation loadConversation(String threadTimestamp) throws SQLException {
     PreparedStatement ps = conn.prepareStatement(SQL.FIND_THREAD_INDEX.get(getIndexTable()));
-    Conversation conv = null;
 
     ps.setString(1, threadTimestamp);
 
@@ -32,15 +31,12 @@ public class Database {
       return null;
     }
 
+    Conversation conv = null;
     SlackUser user = mom.getSession().findUserById(rs.getString("user_id"));
 
     if (!mom.inConvChannel(user.getId())) {
       conv = new Conversation(mom, user.getId(), mom.getUserChannel(user).getId(), threadTimestamp);
-
-      if (mom.addConversation(conv.getDirectChannelID(), conv) == null) {
-        conv.sendToThread(Msg.SESSION_RESUME_CONV.get(mom));
-        conv.sendToUser(Msg.SESSION_RESUME_DIRECT.get(mom));
-      }
+      mom.resumeConversation(conv);
     }
 
     rs.close();
@@ -49,18 +45,16 @@ public class Database {
   }
 
   public ArrayList<LogEntry> lookupLogs(String id, boolean isUser) throws SQLException {
-    ArrayList<LogEntry> logs = new ArrayList<>();
-    PreparedStatement ps;
+    String sql =
+        (isUser)
+            ? SQL.LOOKUP_LOGS_USER.get(getMessagesTable(), getIndexTable())
+            : SQL.LOOKUP_LOGS_THREAD.get(getMessagesTable());
+    PreparedStatement ps = conn.prepareStatement(sql);
 
-    if (isUser) {
-      ps = conn.prepareStatement(SQL.LOOKUP_LOGS_USER.get(getMessagesTable(), getIndexTable()));
-      ps.setString(1, id);
-    } else {
-      ps = conn.prepareStatement(SQL.LOOKUP_LOGS_THREAD.get(getMessagesTable()));
-      ps.setString(1, id);
-    }
+    ps.setString(1, id);
 
     ResultSet rs = ps.executeQuery();
+    ArrayList<LogEntry> logs = new ArrayList<>();
 
     while (rs.next()) {
       logs.add(
@@ -76,8 +70,8 @@ public class Database {
     return logs;
   }
 
-  public ArrayList<ThreadInfo> lookupThreads(String userID, int page) throws SQLException {
-    ArrayList<ThreadInfo> threads = new ArrayList<>();
+  public ArrayList<ConvInfo> lookupThreads(String userID, int page) throws SQLException {
+    ArrayList<ConvInfo> threads = new ArrayList<>();
     PreparedStatement ps;
 
     if (userID != null) {
@@ -94,11 +88,9 @@ public class Database {
     ResultSet rs = ps.executeQuery();
 
     while (rs.next()) {
-      String threadID = rs.getString("thread_id");
-      userID = rs.getString("user_id");
-      String timestamp = rs.getString("timestamp");
-
-      threads.add(new ThreadInfo(threadID, userID, timestamp));
+      threads.add(
+          new ConvInfo(
+              rs.getString("thread_id"), rs.getString("user_id"), rs.getString("timestamp")));
     }
 
     rs.close();

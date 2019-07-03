@@ -14,9 +14,13 @@ public class CmdHelp implements CommandExecutor {
   private Mother mom;
   private HashMap<String, String> help;
 
-  public CmdHelp(Mother mom) {
-    this.mom = mom;
+  private CmdHelp() {
     help = new HashMap<>();
+  }
+
+  public CmdHelp(Mother mom) {
+    this();
+    this.mom = mom;
     help.put("active", Msg.HELP_ACTIVE.get(mom));
     help.put("close", Msg.HELP_CLOSE.get(mom));
     help.put("contact", Msg.HELP_CONTACT.get(mom));
@@ -34,7 +38,7 @@ public class CmdHelp implements CommandExecutor {
     if (args.length == 1) {
       if (!help.containsKey(args[0])) return false;
 
-      mom.sendToChannel(chan, help.get(args[0]), threadTimestamp);
+      mom.sendToThread(chan, help.get(args[0]), threadTimestamp);
       return true;
     }
 
@@ -52,7 +56,7 @@ public class CmdHelp implements CommandExecutor {
       if (help.containsKey(cmd)) sb.append(help.get(cmd));
     }
 
-    mom.sendToChannel(chan, sb.toString(), threadTimestamp);
+    mom.sendToThread(chan, sb.toString(), threadTimestamp);
     return true;
   }
 }

@@ -3,12 +3,16 @@ package com.github.stephengardner.mother.commands;
 import com.github.stephengardner.mother.Mother;
 import com.github.stephengardner.mother.Util;
 import com.github.stephengardner.mother.data.Msg;
-import com.github.stephengardner.mother.data.ThreadInfo;
+import com.github.stephengardner.mother.data.ConvInfo;
 import com.ullink.slack.simpleslackapi.SlackChannel;
 import com.ullink.slack.simpleslackapi.SlackUser;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class CmdHistory implements CommandExecutor {
 
@@ -21,7 +25,7 @@ public class CmdHistory implements CommandExecutor {
   @Override
   public boolean onCommand(
       SlackChannel chan, SlackUser user, String[] args, String threadTimestamp) {
-    ArrayList<ThreadInfo> threads;
+    ArrayList<ConvInfo> threads;
 
     if (args.length > 2) return false;
 
@@ -45,31 +49,34 @@ public class CmdHistory implements CommandExecutor {
       return false;
     }
 
-    mom.sendToChannel(chan, buildOutputList(dstUserID, threads, page), threadTimestamp);
+    mom.sendToThread(chan, buildOutputList(dstUserID, threads, page), threadTimestamp);
     return true;
   }
 
-  private String buildOutputList(String userID, ArrayList<ThreadInfo> threads, int page) {
+  private String buildOutputList(String userID, ArrayList<ConvInfo> threads, int page) {
     StringBuilder sb = new StringBuilder();
 
-    if (userID != null) sb.append(String.format(Msg.LIST_THREADS_USER.get(mom), userID, page));
-    else sb.append(String.format(Msg.LIST_THREADS.get(mom), page));
+    if (userID != null) sb.append(Msg.LIST_THREADS_USER.get(mom, userID, page));
+    else sb.append(Msg.LIST_THREADS.get(mom, page));
 
-    for (ThreadInfo thread : threads) {
-      String threadLink =
-          Util.getThreadLink(mom, mom.getConfig().getConvChannelID(), thread.getThreadID());
+    for (ConvInfo info : threads) {
+      String link = Util.getThreadLink(mom, mom.getConfig().getConvChannelID(), info.getThreadID());
+      SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      Date date;
 
-      if (userID != null) {
-        sb.append(
-            String.format(Msg.LIST_THREADS_ELE_USER.get(mom), threadLink, thread.getTimestamp()));
-      } else {
-        sb.append(
-            String.format(
-                Msg.LIST_THREADS_ELE.get(mom),
-                threadLink,
-                thread.getUserID(),
-                thread.getTimestamp()));
+      df.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+      try {
+        date = df.parse(info.getTimestamp());
+      } catch (ParseException e) {
+        e.printStackTrace();
+        return null;
       }
+
+      df.setTimeZone(TimeZone.getTimeZone(Msg.LOG_TIMESTAMP_ZONE.get(mom)));
+
+      if (userID != null) sb.append(Msg.LIST_THREADS_ELE_USER.get(mom, link, df.format(date)));
+      else sb.append(Msg.LIST_THREADS_ELE.get(mom, link, info.getUserID(), df.format(date)));
     }
 
     if (threads.isEmpty()) sb.append(Msg.LIST_NONE.get(mom));

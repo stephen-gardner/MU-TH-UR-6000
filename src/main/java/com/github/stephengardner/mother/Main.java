@@ -20,33 +20,18 @@ public class Main {
 
   public static void main(String[] args) {
     bots = new HashMap<>();
+    init(new File("config.json"));
+    routineCleaning();
+  }
 
-    try {
-      File configFile = new File("config.json");
-
-      if (!configFile.exists()) {
-        makeConfig(configFile);
-        System.out.println(String.format("%s generated", configFile.getName()));
-        System.exit(0);
-      }
-
-      if (!loadConfig(configFile)) {
-        System.err.println(String.format("Error: %s is missing or invalid", configFile.getPath()));
-        System.exit(1);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(1);
-    }
-
-    boolean run = true;
-
-    while (run) {
+  private static void routineCleaning() {
+    while (true) {
       try {
         Long sleepTime = scrubBots();
 
-        if (sleepTime != null) Thread.sleep(sleepTime);
-        else run = false;
+        if (sleepTime == null) break;
+
+        Thread.sleep(sleepTime);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -60,7 +45,6 @@ public class Main {
 
     while (it.hasNext()) {
       Mother mom = it.next();
-      MotherConfig mc = mom.getConfig();
 
       if (!mom.isOnline()) {
         it.remove();
@@ -75,6 +59,7 @@ public class Main {
         continue;
       }
 
+      MotherConfig mc = mom.getConfig();
       long timeElapsed = currentTime - mom.getLastUpdate();
       long nextUpdate = mc.getTimeoutCheckInterval() - timeElapsed;
 
@@ -86,6 +71,24 @@ public class Main {
     }
 
     return sleepTime;
+  }
+
+  private static void init(File configFile) {
+    try {
+      if (!configFile.exists()) {
+        makeConfig(configFile);
+        System.out.println(String.format("%s generated", configFile.getName()));
+        System.exit(0);
+      }
+
+      if (!loadConfig(configFile)) {
+        System.err.println(String.format("Error: %s is missing or invalid", configFile.getPath()));
+        System.exit(1);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   private static void makeConfig(File configFile) throws IOException {
